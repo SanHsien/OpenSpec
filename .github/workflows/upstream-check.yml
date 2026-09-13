@@ -1,0 +1,31 @@
+name: Upstream Check
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # 每週一早上 10:00 (UTC+8)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-upstream:
+    name: Check Upstream Updates
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run Upstream Check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python tools/check_upstream_updates.py --strict
