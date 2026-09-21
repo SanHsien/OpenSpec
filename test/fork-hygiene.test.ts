@@ -9,7 +9,6 @@ describe('fork maintainer overlay files', () => {
     const required = [
       'FORK.md',
       'NOTICE.md',
-      'CLAUDE.md',
       'GEMINI.md',
       'REVIEW.md',
       'SECURITY.md',

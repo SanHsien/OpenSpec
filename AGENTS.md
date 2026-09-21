@@ -27,6 +27,22 @@
 - 維護工具：`tools/`（Windows gate、上游檢查、相對連結檢查、依賴新鮮度追蹤）。
 - 規格與架構：`schemas/`、`specs/`。
 
+## 常用指令
+
+```powershell
+# 安裝依賴
+pnpm install
+
+# 編譯與構建
+pnpm run build
+
+# 執行測試
+pnpm test
+
+# 執行單一測試
+pnpm exec vitest run test/fork-hygiene.test.ts
+```
+
 ## 開發原則
 
 - 一般變更直接推 `origin/main`，不開功能分支、不開維護 PR。只有在需要他人審查、或改動風險高到值得先讓 CI 在 PR 上跑一輪時，才退回 **branch → PR → CI → merge**。
