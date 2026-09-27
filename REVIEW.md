@@ -42,3 +42,5 @@
    - 啟用 `.cursor/rules/no-upstream-pr.mdc` 與 `gh repo set-default SanHsien/OpenSpec`。
    - `release-prepare.yml` 具有 `if: github.repository == 'Fission-AI/OpenSpec'` 閘門，確保 fork 不會誤觸發發布。
 4. **維護工具鏈**：建立 `tools/dev_check.ps1`、`tools/check_links.py`、`tools/check_upstream_updates.py` 與契約測試。
+5. **CodeQL 靜態分析安全工作流**：建立 `.github/workflows/codeql.yml`，針對 `javascript-typescript` 語言進行安全掃描。設定 `build-mode: none` 與 `timeout-minutes: 15`，略過冗餘編譯與 autobuild 步驟，徹底防範 GitHub Actions 執行逾時。
+6. **三軸上游水位追蹤與審查機制**：以 `tools/check_upstream_updates.py --strict` 搭配 `tools/upstream_baseline.json` 嚴格管控上游變更（Commit / PR / Issue），所有上游更新經審查並在 `docs/DECISIONS.md` 逐筆留下採用/跳過決策後始推進水位，確保 Fork 的穩定性與 Windows 原生支援。最新基準水位推進至 commit `79b6aa9`（2026-09-27）、PR `#1987`、Issue `#1986`。
