@@ -163,11 +163,13 @@ export function getNestedValue(obj: Record<string, unknown>, path: string): unkn
  * @param value - The value to set
  */
 export function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown): void {
+  if (!obj || typeof obj !== 'object' || obj === Object.prototype) {
+    return;
+  }
+
   const keys = path.split('.');
 
-  // Compared literally rather than through a helper, so the guard is plain to a
-  // reader and to static analysis. Checked for the whole path before anything is
-  // written, so a rejected key never leaves half-created objects behind.
+  // Check all segments upfront to avoid half-creating structures
   for (const key of keys) {
     if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
       return;
@@ -178,13 +180,22 @@ export function setNestedValue(obj: Record<string, unknown>, path: string, value
 
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i];
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      return;
+    }
     if (current[key] === undefined || current[key] === null || typeof current[key] !== 'object') {
       current[key] = {};
     }
     current = current[key] as Record<string, unknown>;
+    if (!current || typeof current !== 'object' || current === Object.prototype) {
+      return;
+    }
   }
 
   const lastKey = keys[keys.length - 1];
+  if (lastKey === '__proto__' || lastKey === 'constructor' || lastKey === 'prototype') {
+    return;
+  }
   current[lastKey] = value;
 }
 
@@ -196,6 +207,10 @@ export function setNestedValue(obj: Record<string, unknown>, path: string, value
  * @returns true if the key existed and was deleted, false otherwise
  */
 export function deleteNestedValue(obj: Record<string, unknown>, path: string): boolean {
+  if (!obj || typeof obj !== 'object' || obj === Object.prototype) {
+    return false;
+  }
+
   const keys = path.split('.');
 
   for (const key of keys) {
@@ -208,13 +223,22 @@ export function deleteNestedValue(obj: Record<string, unknown>, path: string): b
 
   for (let i = 0; i < keys.length - 1; i++) {
     const key = keys[i];
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      return false;
+    }
     if (current[key] === undefined || current[key] === null || typeof current[key] !== 'object') {
       return false;
     }
     current = current[key] as Record<string, unknown>;
+    if (!current || typeof current !== 'object' || current === Object.prototype) {
+      return false;
+    }
   }
 
   const lastKey = keys[keys.length - 1];
+  if (lastKey === '__proto__' || lastKey === 'constructor' || lastKey === 'prototype') {
+    return false;
+  }
   if (lastKey in current) {
     delete current[lastKey];
     return true;

@@ -331,6 +331,8 @@
 |---|---|---|
 | PR #1992 feat(config): connect roots in monorepos | feat | 跟隨上游（OPEN，+1118/-62 的大型功能，合併並發行後依 release 帶入） |
 | PR #1994 fix(apply): include task source locations | fix | 跟隨上游（OPEN，#1993 的修正，合併後隨 release 帶入） |
+| PR #1995 fix(config): clarify project context guidance | fix/docs | 跟隨上游（OPEN，設定引導調整，合併後隨 release 帶入） |
+| PR #1996 docs(config): focus project guidance on durable constraints | docs | 跟隨上游（OPEN，設定文件說明聚焦，合併後隨 release 帶入） |
 | Issue #1993 Apply workflow cannot map aggregated tasks back to custom-schema files | bug | 跟隨上游（由 #1994 處理） |
 
-`reviewed_pr_through` 推進至 `#1994`，`reviewed_issue_through` 推進至 `#1993`。
+`reviewed_pr_through` 推進至 `#1996`，`reviewed_issue_through` 推進至 `#1993`。

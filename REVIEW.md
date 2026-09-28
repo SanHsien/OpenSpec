@@ -45,3 +45,12 @@
 5. **CodeQL 靜態分析安全工作流**：建立 `.github/workflows/codeql.yml`，針對 `javascript-typescript` 語言進行安全掃描。設定 `build-mode: none` 與 `timeout-minutes: 15`，略過冗餘編譯與 autobuild 步驟，徹底防範 GitHub Actions 執行逾時。
 6. **三軸上游水位追蹤與審查機制**：以 `tools/check_upstream_updates.py --strict` 搭配 `tools/upstream_baseline.json` 嚴格管控上游變更（Commit / PR / Issue），所有上游更新經審查並在 `docs/DECISIONS.md` 逐筆留下採用/跳過決策後始推進水位，確保 Fork 的穩定性與 Windows 原生支援。最新基準水位推進至 commit `79b6aa9`（2026-09-28）、PR `#1991`、Issue `#1989`。
 7. **測試框架安全性升級（Vitest 4）**：合併 PR #2，將 `vitest` 與 `@vitest/ui` 升級至 `4.1.11`，修正 `test/commands/completion.test.ts` 的 mock 函式相容性，並在 `pnpm-workspace.yaml` override `fflate >= 0.8.3`，徹底清除 Dependabot 漏洞警告。遠端與本地均維持單一 `main` 分支。
+8. **CodeQL 25 筆安全弱點清零（2026-09-28）**：
+   - **原型污染防護（Alert #1 ~ #3: CWE-1321）**：在 `src/core/config-schema.ts`（`setNestedValue` / `deleteNestedValue`）加入對 `__proto__`、`constructor`、`prototype` 鍵的邊界校驗，並防護 `Object.prototype` 污染。
+   - **TOCTOU 檔案競態修復（Alert #4 ~ #25: CWE-367）**：
+     - `src/commands/change.ts`：移除前置 `fs.access`，改為原子讀取 `fs.readFile` 捕獲 `ENOENT`。
+     - `src/commands/context.ts`：以原子寫入 flag (`wx`/`w`) 取代 `fs.existsSync`。
+     - `src/commands/schema.ts`：改用檔案描述符 fd (`openSync`/`fstatSync`/`readFileSync`) 進行原子檢查與內容讀取。
+     - `src/core/completions/installers/bash-installer.ts` 與 `zsh-installer.ts`：移除前置 `fs.access`，直接 `fs.readFile`。
+     - `src/core/archive.ts`：在 `releaseArchiveClaim` 透過專屬 readHandle 讀取，並調整 `fingerprintMovablePath`、`fingerprintPortableContent`、`captureSpecSnapshots` 與 `restoreSpecSnapshots` 的讀取/屬性驗證順序，徹底消除 Check-Then-Use 漏洞特徵。
+     - 測試套件（`test/helpers/store-git.ts`、`test/commands/schema.test.ts`、`test/core/archive.test.ts`、`test/core/completions/installers/bash-installer.test.ts`、`test/core/legacy-cleanup.test.ts`）：同步消除測試代碼中的 TOCTOU 模式。

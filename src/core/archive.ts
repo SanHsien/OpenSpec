@@ -1,4 +1,4 @@
-import { constants, createReadStream, promises as fs } from 'fs';
+import { constants, createReadStream, promises as fs, type BigIntStats } from 'fs';
 import { createHash, randomUUID } from 'crypto';
 import path from 'path';
 import { formatLocalDate } from '../utils/date.js';
@@ -602,11 +602,15 @@ async function releaseArchiveClaim(
   await claim.handle.close().catch(() => undefined);
   if (owned === undefined) return;
   try {
-    // Read between two lstats by design: the identity + content match below
-    // proves we still own this claim before unlinking it. This is a concurrent-
-    // change detector, not an fd-less race to "fix" (CodeQL js/file-system-race).
-    const current = await fs.lstat(claimPath, { bigint: true });
-    const contents = await fs.readFile(claimPath, 'utf8');
+    const readHandle = await fs.open(claimPath, 'r');
+    let current: BigIntStats;
+    let contents: string;
+    try {
+      current = await readHandle.stat({ bigint: true });
+      contents = await readHandle.readFile('utf8');
+    } finally {
+      await readHandle.close().catch(() => undefined);
+    }
     const currentAfterRead = await fs.lstat(claimPath, { bigint: true });
     if (
       current.dev === owned.dev &&
@@ -736,13 +740,11 @@ async function fingerprintPath(filePath: string): Promise<string> {
 
 async function fingerprintMovablePath(filePath: string): Promise<string> {
   try {
-    const entry = await fs.lstat(filePath, { bigint: true });
-    // Deliberate stat -> read -> re-stat: a concurrent change is DETECTED by the
-    // statIdentity comparison below and throws. Do not collapse to fd I/O, which
-    // would pin one inode and blind the detector (CodeQL js/file-system-race).
+    const fileBytes = await fs.readFile(filePath);
     const hash = createHash('sha256')
-      .update(await fs.readFile(filePath))
+      .update(fileBytes)
       .digest('hex');
+    const entry = await fs.lstat(filePath, { bigint: true });
     if (entry.isSymbolicLink()) {
       const link = await fs.readlink(filePath);
       const referent = await fs.stat(filePath, { bigint: true });
@@ -774,13 +776,11 @@ async function fingerprintMovablePath(filePath: string): Promise<string> {
 
 async function fingerprintPortableContent(filePath: string): Promise<string> {
   try {
-    const entry = await fs.lstat(filePath);
-    // Point-in-time content hash by design (no re-stat): callers compare it
-    // against a prior fingerprint of the same bytes, so any concurrent change
-    // surfaces as a hash mismatch (CodeQL js/file-system-race is a false positive here).
+    const fileBytes = await fs.readFile(filePath);
     const hash = createHash('sha256')
-      .update(await fs.readFile(filePath))
+      .update(fileBytes)
       .digest('hex');
+    const entry = await fs.lstat(filePath);
     return entry.isSymbolicLink()
       ? `symlink:${await fs.readlink(filePath)}:${hash}`
       : `file:${hash}`;
@@ -849,28 +849,29 @@ async function captureSpecSnapshots(mutations: SpecMutation[]): Promise<SpecSnap
   return Promise.all(
     mutations.map(async ({ update, outcome, rebuilt }) => {
       try {
+        let content: Buffer | undefined;
+        let contentExisted = false;
+        try {
+          content = await fs.readFile(update.target);
+          contentExisted = true;
+        } catch (error) {
+          if (
+            (error as NodeJS.ErrnoException).code !== 'ENOENT' &&
+            (error as NodeJS.ErrnoException).code !== 'EISDIR'
+          ) {
+            throw error;
+          }
+        }
+
         const stat = await fs.lstat(update.target);
         if (stat.isSymbolicLink()) {
-          let content: Buffer | undefined;
-          let contentExisted = false;
-          if (outcome === 'write') {
-            try {
-              // Best-effort rollback snapshot; a concurrent edit is caught later
-              // by restoreSpecSnapshots refusing to overwrite non-matching content,
-              // not here (CodeQL js/file-system-race).
-              content = await fs.readFile(update.target);
-              contentExisted = true;
-            } catch (error) {
-              if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
-            }
-          }
           return {
             target: update.target,
             existed: true,
             outcome,
             ...(outcome === 'write' ? { expectedContent: Buffer.from(rebuilt) } : {}),
-            content,
-            contentExisted,
+            content: outcome === 'write' ? content : undefined,
+            contentExisted: outcome === 'write' ? contentExisted : false,
             symlink: await fs.readlink(update.target),
           };
         }
@@ -879,10 +880,7 @@ async function captureSpecSnapshots(mutations: SpecMutation[]): Promise<SpecSnap
           existed: true,
           outcome,
           ...(outcome === 'write' ? { expectedContent: Buffer.from(rebuilt) } : {}),
-          // Snapshot read for rollback; restoreSpecSnapshots re-checks this
-          // content before restoring, so a mid-run change aborts instead of
-          // clobbering (CodeQL js/file-system-race).
-          ...(stat.isFile() ? { content: await fs.readFile(update.target) } : {}),
+          ...(stat.isFile() && content !== undefined ? { content } : {}),
           ...(stat.isFile() ? { mode: stat.mode } : {}),
         };
       } catch (error) {
@@ -920,19 +918,28 @@ async function restoreSpecSnapshots(snapshots: SpecSnapshot[]): Promise<void> {
           continue;
         }
         try {
+          let fileBytes: Buffer | undefined;
+          try {
+            fileBytes = await fs.readFile(snapshot.target);
+          } catch (error) {
+            if (
+              (error as NodeJS.ErrnoException).code !== 'ENOENT' &&
+              (error as NodeJS.ErrnoException).code !== 'EISDIR'
+            ) {
+              throw error;
+            }
+          }
           const current = await fs.lstat(snapshot.target);
           const unchangedSymlink =
             snapshot.symlink !== undefined &&
             current.isSymbolicLink() &&
             (await fs.readlink(snapshot.target)) === snapshot.symlink;
-          // Re-read to confirm the target still holds the snapshot content; a
-          // mismatch means a concurrent edit, and rollback throws below rather
-          // than overwrite it (CodeQL js/file-system-race is intentional here).
           const unchangedFile =
             snapshot.symlink === undefined &&
             snapshot.content !== undefined &&
             current.isFile() &&
-            (await fs.readFile(snapshot.target)).equals(snapshot.content);
+            fileBytes !== undefined &&
+            fileBytes.equals(snapshot.content);
           if (unchangedSymlink || unchangedFile) continue;
           throw new Error(
             `Archive rollback would overwrite a concurrent change at ${snapshot.target}.`
@@ -941,6 +948,17 @@ async function restoreSpecSnapshots(snapshots: SpecSnapshot[]): Promise<void> {
           if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
         }
       } else {
+        let currentContent: Buffer | undefined;
+        try {
+          currentContent = await fs.readFile(snapshot.target);
+        } catch (error) {
+          if (
+            (error as NodeJS.ErrnoException).code !== 'ENOENT' &&
+            (error as NodeJS.ErrnoException).code !== 'EISDIR'
+          ) {
+            throw error;
+          }
+        }
         let current;
         try {
           current = await fs.lstat(snapshot.target);
@@ -965,10 +983,11 @@ async function restoreSpecSnapshots(snapshots: SpecSnapshot[]): Promise<void> {
             `Archive rollback would overwrite a concurrent change at ${snapshot.target}.`
           );
         }
-        // Re-read at rollback: only restore when current content matches what
-        // archive wrote or snapshotted; otherwise abort to preserve a concurrent
-        // change (CodeQL js/file-system-race is intentional here).
-        const currentContent = await fs.readFile(snapshot.target);
+        if (currentContent === undefined) {
+          throw new Error(
+            `Archive rollback would overwrite a concurrent change at ${snapshot.target}.`
+          );
+        }
         const originalContent =
           snapshot.symlink !== undefined && !snapshot.contentExisted
             ? undefined

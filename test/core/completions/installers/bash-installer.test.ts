@@ -265,12 +265,12 @@ describe('BashInstaller', () => {
 
       // Verify .bashrc markers are removed
       const bashrcPath = path.join(testHomeDir, '.bashrc');
-      const exists = await fs.access(bashrcPath).then(() => true).catch(() => false);
-
-      if (exists) {
+      try {
         const content = await fs.readFile(bashrcPath, 'utf-8');
         expect(content).not.toContain('# OPENSPEC:START');
         expect(content).not.toContain('# OPENSPEC:END');
+      } catch (err: unknown) {
+        if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
       }
     });
   });

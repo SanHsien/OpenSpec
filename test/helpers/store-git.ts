@@ -19,8 +19,10 @@ export function createHealthyOpenSpecRoot(root: string, configName = 'config.yam
  */
 export function isolatedGitEnv(tempDir: string): NodeJS.ProcessEnv {
   const emptyConfig = path.join(tempDir, 'gitconfig-empty');
-  if (!fs.existsSync(emptyConfig)) {
-    fs.writeFileSync(emptyConfig, '');
+  try {
+    fs.writeFileSync(emptyConfig, '', { flag: 'wx' });
+  } catch {
+    // Already created, reuse
   }
   return {
     GIT_CONFIG_GLOBAL: emptyConfig,

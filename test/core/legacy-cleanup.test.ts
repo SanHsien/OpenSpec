@@ -585,9 +585,7 @@ ${OPENSPEC_MARKERS.end}`);
       // Config files should NEVER be deleted, only have markers removed
       expect(result.deletedFiles).not.toContain('CLAUDE.md');
       expect(result.modifiedFiles).toContain('CLAUDE.md');
-      // File should still exist
-      await expect(fs.access(claudePath)).resolves.not.toThrow();
-      // File should be empty or have markers removed
+      // File should still exist and be empty or have markers removed
       const content = await fs.readFile(claudePath, 'utf-8');
       expect(content).not.toContain(OPENSPEC_MARKERS.start);
       expect(content).not.toContain(OPENSPEC_MARKERS.end);

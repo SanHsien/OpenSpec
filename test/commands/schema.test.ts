@@ -380,8 +380,8 @@ artifacts:
 
       expect(process.exitCode).not.toBe(1);
       const copiedTemplate = path.join(destinationDir, 'templates', 'proposal.md');
-      expect(fs.lstatSync(copiedTemplate).isFile()).toBe(true);
       expect(fs.readFileSync(copiedTemplate, 'utf8')).toBe('# Shared template\n');
+      expect(fs.lstatSync(copiedTemplate).isFile()).toBe(true);
     });
 
     it('should fork a linked schema root', async () => {

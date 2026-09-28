@@ -119,31 +119,36 @@ export class ChangeCommand {
       throw new Error(`Change "${changeName}" not found at ${proposalPath}`);
     }
 
-    try {
-      await fs.access(proposalPath);
-    } catch {
-      // A change can exist without a proposal: `openspec new change` scaffolds
-      // only .openspec.yaml, and a custom schema need not define a proposal
-      // artifact. Say which of the two cases this is instead of reporting a
-      // change that does exist as missing. A stray file under changes/ is not a
-      // change, and naming it one would point the user at a `status --change`
-      // call that cannot work.
-      const isChangeDirectory = await fs
-        .stat(changeDir)
-        .then((stats) => stats.isDirectory())
-        .catch(() => false);
-      if (isChangeDirectory) {
-        throw new Error(
-          `Change "${changeName}" has no proposal.md yet. ` +
-            `Run "openspec status --change ${changeName}" to see which artifact comes next.`
-        );
-      }
-      throw new Error(`Change "${changeName}" not found at ${proposalPath}`);
-    }
     FileSystemUtils.assertPathWithin(path.dirname(proposalPath), proposalPath);
+    FileSystemUtils.assertPathWithin(changeDir, proposalPath);
+
+    let proposalContent: string;
+    try {
+      proposalContent = await fs.readFile(proposalPath, 'utf-8');
+    } catch (error: unknown) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        // A change can exist without a proposal: `openspec new change` scaffolds
+        // only .openspec.yaml, and a custom schema need not define a proposal
+        // artifact. Say which of the two cases this is instead of reporting a
+        // change that does exist as missing. A stray file under changes/ is not a
+        // change, and naming it one would point the user at a `status --change`
+        // call that cannot work.
+        const isChangeDirectory = await fs
+          .stat(changeDir)
+          .then((stats) => stats.isDirectory())
+          .catch(() => false);
+        if (isChangeDirectory) {
+          throw new Error(
+            `Change "${changeName}" has no proposal.md yet. ` +
+              `Run "openspec status --change ${changeName}" to see which artifact comes next.`
+          );
+        }
+        throw new Error(`Change "${changeName}" not found at ${proposalPath}`);
+      }
+      throw error;
+    }
 
     if (options?.json) {
-      FileSystemUtils.assertPathWithin(changeDir, proposalPath);
       const jsonOutput = await this.converter.convertChangeToJson(proposalPath);
 
       if (options.requirementsOnly) {
@@ -151,9 +156,7 @@ export class ChangeCommand {
       }
 
       const parsed: Change = JSON.parse(jsonOutput);
-      FileSystemUtils.assertPathWithin(changeDir, proposalPath);
-      const contentForTitle = await fs.readFile(proposalPath, 'utf-8');
-      const title = this.extractTitle(contentForTitle, changeName);
+      const title = this.extractTitle(proposalContent, changeName);
       const id = parsed.name;
       const deltas = parsed.deltas || [];
 
@@ -170,9 +173,7 @@ export class ChangeCommand {
       };
       console.log(JSON.stringify(output, null, 2));
     } else {
-      FileSystemUtils.assertPathWithin(changeDir, proposalPath);
-      const content = await fs.readFile(proposalPath, 'utf-8');
-      console.log(content);
+      console.log(proposalContent);
 
       if (options?.diff) {
         await this.showSpecDiffs(changeName, changesPath);

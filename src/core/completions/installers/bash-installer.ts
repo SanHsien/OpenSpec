@@ -173,16 +173,16 @@ export class BashInstaller {
     try {
       const bashrcPath = this.getBashrcPath();
 
-      // Check if file exists
+      // Read file content directly; return true if file doesn't exist
+      let content: string;
       try {
-        await fs.access(bashrcPath);
-      } catch {
-        // File doesn't exist, nothing to remove
-        return true;
+        content = await fs.readFile(bashrcPath, 'utf-8');
+      } catch (err: unknown) {
+        if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+          return true;
+        }
+        throw err;
       }
-
-      // Read file content
-      const content = await fs.readFile(bashrcPath, 'utf-8');
 
       // Check if markers exist
       if (!content.includes(this.BASHRC_MARKERS.start) || !content.includes(this.BASHRC_MARKERS.end)) {

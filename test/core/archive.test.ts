@@ -6278,11 +6278,11 @@ The system SHALL provide a replacement behavior.
 
         await archiveCommand.execute(changeName, { yes: true });
 
-        expect((await fs.stat(target, { bigint: true })).ino).toBe(originalInode);
-        expect((await fs.stat(linked, { bigint: true })).ino).toBe(originalInode);
         await expect(fs.readFile(linked, 'utf-8')).resolves.toContain(
           '### Requirement: A replacement behavior'
         );
+        expect((await fs.stat(target, { bigint: true })).ino).toBe(originalInode);
+        expect((await fs.stat(linked, { bigint: true })).ino).toBe(originalInode);
       }
     );
 
@@ -7034,10 +7034,10 @@ The system SHALL provide a new behavior.
           /rollback would overwrite a concurrent change/
         );
 
-        expect((await fs.stat(writtenTarget)).mode & 0o777).toBe(0o600);
         await expect(fs.readFile(writtenTarget, 'utf-8')).resolves.toContain(
           'updated legacy layer'
         );
+        expect((await fs.stat(writtenTarget)).mode & 0o777).toBe(0o600);
         await expect(fs.access(changeDir)).resolves.not.toThrow();
       }
     );

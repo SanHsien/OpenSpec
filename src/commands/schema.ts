@@ -393,9 +393,19 @@ async function prepareDefaultConfigUpdate(
     path.join(projectRoot, 'openspec', 'config.yaml');
   FileSystemUtils.assertProjectArtifactPath(projectRoot, configPath);
 
-  if (fs.existsSync(configPath)) {
-    const stats = fs.lstatSync(configPath);
-    if (stats.isSymbolicLink()) {
+  try {
+    const fd = fs.openSync(configPath, 'r');
+    let originalContent: Buffer;
+    let stats: fs.Stats;
+    try {
+      stats = fs.fstatSync(fd);
+      originalContent = fs.readFileSync(fd);
+    } finally {
+      fs.closeSync(fd);
+    }
+
+    const lstats = fs.lstatSync(configPath);
+    if (lstats.isSymbolicLink()) {
       throw new Error(
         `Cannot set the default schema: ${path.basename(configPath)} must be a regular file, not a symbolic link`
       );
@@ -414,7 +424,6 @@ async function prepareDefaultConfigUpdate(
       );
     }
 
-    const originalContent = fs.readFileSync(configPath);
     const config = parseDocument(originalContent.toString('utf-8'));
     if (config.errors.length > 0) {
       throw new Error(
@@ -435,35 +444,54 @@ async function prepareDefaultConfigUpdate(
       originalContent,
       originalMode: stats.mode,
     };
-  }
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      if (!(await FileSystemUtils.canWriteFile(configPath))) {
+        throw new Error(
+          `Cannot set the default schema: ${path.dirname(configPath)} is not writable`
+        );
+      }
 
-  if (!(await FileSystemUtils.canWriteFile(configPath))) {
-    throw new Error(
-      `Cannot set the default schema: ${path.dirname(configPath)} is not writable`
-    );
+      return {
+        path: configPath,
+        content: Buffer.from(stringifyYaml({ schema: schemaName })),
+        originalContent: null,
+        originalMode: null,
+      };
+    }
+    throw err;
   }
-
-  return {
-    path: configPath,
-    content: Buffer.from(stringifyYaml({ schema: schemaName })),
-    originalContent: null,
-    originalMode: null,
-  };
 }
 
 function configMatchesPreparedState(prepared: PreparedConfigUpdate): boolean {
   if (prepared.originalContent === null) {
-    return !fs.existsSync(prepared.path);
+    try {
+      fs.accessSync(prepared.path);
+      return false;
+    } catch {
+      return true;
+    }
   }
-  if (!fs.existsSync(prepared.path)) return false;
 
-  const stats = fs.lstatSync(prepared.path);
-  return (
-    stats.isFile() &&
-    !stats.isSymbolicLink() &&
-    stats.mode === prepared.originalMode &&
-    fs.readFileSync(prepared.path).equals(prepared.originalContent)
-  );
+  try {
+    const fd = fs.openSync(prepared.path, 'r');
+    try {
+      const stats = fs.fstatSync(fd);
+      const lstats = fs.lstatSync(prepared.path);
+      if (
+        !stats.isFile() ||
+        lstats.isSymbolicLink() ||
+        stats.mode !== prepared.originalMode
+      ) {
+        return false;
+      }
+      return fs.readFileSync(fd).equals(prepared.originalContent);
+    } finally {
+      fs.closeSync(fd);
+    }
+  } catch {
+    return false;
+  }
 }
 
 /**

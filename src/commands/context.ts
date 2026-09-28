@@ -123,27 +123,33 @@ function writeCodeWorkspace(
   force: boolean
 ): void {
   const resolved = path.resolve(outputPath);
-  if (fs.existsSync(resolved) && !force) {
-    throw new StoreError(
-      `Refusing to overwrite ${resolved}.`,
-      'context_file_exists',
-      {
-        target: 'context.output',
-        fix: `Pass --force to overwrite, or choose a different path.`,
-      }
-    );
-  }
-  const parent = path.dirname(resolved);
-  if (!fs.existsSync(parent)) {
-    throw new StoreError(
-      `Output directory does not exist: ${parent}.`,
-      'context_output_dir_missing',
-      { target: 'context.output', fix: 'Create the directory first, or choose another path.' }
-    );
-  }
-
   const rootName = workingSet.root.store_id ?? path.basename(workingSet.root.path);
-  fs.writeFileSync(resolved, buildCodeWorkspaceJson(workingSet, rootName));
+  const content = buildCodeWorkspaceJson(workingSet, rootName);
+
+  try {
+    fs.writeFileSync(resolved, content, { flag: force ? 'w' : 'wx' });
+  } catch (error: unknown) {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code === 'EEXIST' && !force) {
+      throw new StoreError(
+        `Refusing to overwrite ${resolved}.`,
+        'context_file_exists',
+        {
+          target: 'context.output',
+          fix: `Pass --force to overwrite, or choose a different path.`,
+        }
+      );
+    }
+    if (err.code === 'ENOENT') {
+      const parent = path.dirname(resolved);
+      throw new StoreError(
+        `Output directory does not exist: ${parent}.`,
+        'context_output_dir_missing',
+        { target: 'context.output', fix: 'Create the directory first, or choose another path.' }
+      );
+    }
+    throw error;
+  }
 
   const available = workingSet.members.filter(isAvailableMember).length;
   const skipped = workingSet.members
