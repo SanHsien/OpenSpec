@@ -299,3 +299,28 @@
 共 22 筆 issue，全數 triage 完畢。
 
 - **水位推進**：`tools/upstream_baseline.json` 更新為 `reviewed_through=79b6aa9c98f1e36795b2bc4ef2a8f770c6d3a777`（2026-09-27）、`reviewed_pr_through=1987`、`reviewed_issue_through=1986`。
+
+## 2026-09-28：合併 PR #2（升級 Vitest 4 與安全修復）與上游最新 Triage
+
+- **背景**：主人授權合併 PR #2（`security/vitest-4`），並清理遠端多餘分支，最終只留 `main`。同時檢出上游新進 2 筆 PR（#1990, #1991）與 2 筆 Issue（#1988, #1989）並完成 triage。
+- **PR #2 合併決策**：
+  - 升級 `vitest` 與 `@vitest/ui` 至 `^4.1.11`，修復 Dependabot 漏洞警告（#1、#3、#4）。
+  - 修復 `test/commands/completion.test.ts` 以相容 Vitest 4 constructor mock 規格。
+  - 在 `pnpm-workspace.yaml` override `fflate >= 0.8.3`，並更新 `flake.nix` pnpmDeps hash。
+  - 關閉已被 PR #2 取代之 PR #1（`dependabot/npm_and_yarn/vitest-4.1.11`）。
+
+### Pull Requests（逐筆，`reviewed_pr_through` 推進至 `#1991`）
+
+| PR | 分類 | 決策 |
+| --- | --- | --- |
+| #1990 | chore | 不適用（上游 dev 相依性更新，本 fork 獨立追蹤） |
+| #1991 | chore | 不適用（上游 website 相依性更新，本 fork 獨立追蹤） |
+
+### Issues（逐筆，`reviewed_issue_through` 推進至 `#1989`）
+
+| Issue | 分類 | 決策 |
+| --- | --- | --- |
+| #1988 | feat | 暫不採用，待主人決定（CLI 版本查詢功能提案，需要評估是否引入） |
+| #1989 | feat | 暫不採用，待主人決定（自更新與獨立二進位提案，需要評估是否引入） |
+
+- **水位推進**：`tools/upstream_baseline.json` 更新為 `reviewed_through=79b6aa9c98f1e36795b2bc4ef2a8f770c6d3a777`（2026-09-28）、`reviewed_pr_through=1991`、`reviewed_issue_through=1989`。
