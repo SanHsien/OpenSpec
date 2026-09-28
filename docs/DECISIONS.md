@@ -320,7 +320,17 @@
 
 | Issue | 分類 | 決策 |
 | --- | --- | --- |
-| #1988 | feat | 暫不採用，待主人決定（CLI 版本查詢功能提案，需要評估是否引入） |
-| #1989 | feat | 暫不採用，待主人決定（自更新與獨立二進位提案，需要評估是否引入） |
+| #1988 | feat | 跟隨上游（功能提案，上游採納並發行後依 release 帶入） |
+| #1989 | feat | 跟隨上游（功能提案，上游採納並發行後依 release 帶入） |
 
 - **水位推進**：`tools/upstream_baseline.json` 更新為 `reviewed_through=79b6aa9c98f1e36795b2bc4ef2a8f770c6d3a777`（2026-09-28）、`reviewed_pr_through=1991`、`reviewed_issue_through=1989`。
+
+### 上游分流補記（2026-09-28 驗收時）
+
+| 項目 | 類型 | 判定 |
+|---|---|---|
+| PR #1992 feat(config): connect roots in monorepos | feat | 跟隨上游（OPEN，+1118/-62 的大型功能，合併並發行後依 release 帶入） |
+| PR #1994 fix(apply): include task source locations | fix | 跟隨上游（OPEN，#1993 的修正，合併後隨 release 帶入） |
+| Issue #1993 Apply workflow cannot map aggregated tasks back to custom-schema files | bug | 跟隨上游（由 #1994 處理） |
+
+`reviewed_pr_through` 推進至 `#1994`，`reviewed_issue_through` 推進至 `#1993`。
