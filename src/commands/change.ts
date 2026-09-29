@@ -119,14 +119,15 @@ export class ChangeCommand {
       throw new Error(`Change "${changeName}" not found at ${proposalPath}`);
     }
 
-    FileSystemUtils.assertPathWithin(path.dirname(proposalPath), proposalPath);
-    FileSystemUtils.assertPathWithin(changeDir, proposalPath);
-
     let proposalContent: string;
     try {
+      FileSystemUtils.assertPathWithin(path.dirname(proposalPath), proposalPath);
+      FileSystemUtils.assertPathWithin(changeDir, proposalPath);
       proposalContent = await fs.readFile(proposalPath, 'utf-8');
     } catch (error: unknown) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      // POSIX reports a path under a regular file as ENOTDIR; Windows reports ENOENT.
+      const code = (error as NodeJS.ErrnoException).code;
+      if (code === 'ENOENT' || code === 'ENOTDIR') {
         // A change can exist without a proposal: `openspec new change` scaffolds
         // only .openspec.yaml, and a custom schema need not define a proposal
         // artifact. Say which of the two cases this is instead of reporting a

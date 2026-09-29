@@ -173,12 +173,14 @@ export class BashInstaller {
     try {
       const bashrcPath = this.getBashrcPath();
 
-      // Read file content directly; return true if file doesn't exist
+      // Read file content directly; an unreadable .bashrc has no OpenSpec block
+      // we could remove (Linux reports EACCES for /root, macOS reports ENOENT).
       let content: string;
       try {
         content = await fs.readFile(bashrcPath, 'utf-8');
       } catch (err: unknown) {
-        if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code === 'ENOENT' || code === 'ENOTDIR' || code === 'EACCES') {
           return true;
         }
         throw err;
