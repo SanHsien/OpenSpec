@@ -33,13 +33,13 @@
    - **PR #1829 / Issue #1827**（bulk-archive 目標檢查）：尚處於設計討論中，維持目前穩定實作。
 ## 2026-09-21：上游同步 Triage（Commit/PR/Issue 三軸水位推進）
 
-- **背景**：`tools/check_upstream_updates.py --strict` 回報自 2026-09-12 基線以來上游新增 39 個 commit、41 個 PR、37 個 issue，皆逐筆 triage。本次僅做決策記錄與水位推進，**不合併任何上游程式碼**（回貢/移植需主人在對話中明確同意，依 FORK.md 判準）。
+- **背景**：`tools/check_upstream_updates.py --strict` 回報自 2026-09-12 基線以來上游新增 39 個 commit、41 個 PR、37 個 issue，皆逐筆 triage。本次僅做決策記錄與水位推進，**不合併任何上游程式碼**（回貢/移植需維護者在對話中明確同意，依 FORK.md 判準）。
 - **分類原則**：
   - `windows` = 與本 fork「Windows-first」維護宗旨直接相關（EPERM/CRLF/bashrc 等），列為優先候選但本次仍不動 `src/`。
   - `security` = 延續 2026-09-12 對 PR #1835 安全性 hardening 的長期觀察清單。
   - `chore` = 相依性/CI/release 版務，交由 `tools/check_dependency_freshness.py` 獨立追蹤。
   - `docs` = 上游文件用語調整，不影響繁中主檔。
-  - `feat` = 新功能提案，需主人評估。
+  - `feat` = 新功能提案，需維護者評估。
   - `fix` = 一般性上游缺陷修復，未涉及本 fork 專屬骨架。
 
 ### Commits（逐筆，`reviewed_through` 推進至 `bae58cf`）
@@ -47,42 +47,42 @@
 | Commit | 分類 | 決策 |
 | --- | --- | --- |
 | `b928165` | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
-| `09984b8` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `09a999b` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `8b99c07` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `7de2404` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `3b8e5b6` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `e571b5b` | security | 暫不採用，待主人決定（安全性 hardening，延續 2026-09-12 決策的長期觀察清單，待上游穩定或主人明確同意後再評估移植） |
-| `6e62b1d` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `767d63c` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `4b5c07a` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `46ff91f` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `db560ae` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `e01ed07` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `5d22145` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `208b5b5` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `9f8dec5` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `2ef6fbd` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `388d344` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `72bf760` | windows | 暫不採用，待主人決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
-| `8146be5` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `4c369e0` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `92fb72d` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `8fc65b7` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `fede536` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `09984b8` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `09a999b` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `8b99c07` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `7de2404` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `3b8e5b6` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `e571b5b` | security | 暫不採用，待維護者決定（安全性 hardening，延續 2026-09-12 決策的長期觀察清單，待上游穩定或維護者明確同意後再評估移植） |
+| `6e62b1d` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `767d63c` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `4b5c07a` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `46ff91f` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `db560ae` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `e01ed07` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `5d22145` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `208b5b5` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `9f8dec5` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `2ef6fbd` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `388d344` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `72bf760` | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
+| `8146be5` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `4c369e0` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `92fb72d` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `8fc65b7` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `fede536` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | `6a87a51` | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
-| `a5bf5c6` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `7090e16` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `a5bf5c6` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `7090e16` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | `086c93b` | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
-| `626269e` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `605d9e7` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `e67ac47` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `62106f4` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `11a9691` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `9827762` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `5f5914e` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `3312af4` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `eb03b9e` | security | 暫不採用，待主人決定（安全性 hardening，延續 2026-09-12 決策的長期觀察清單，待上游穩定或主人明確同意後再評估移植） |
+| `626269e` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `605d9e7` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `e67ac47` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `62106f4` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `11a9691` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `9827762` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `5f5914e` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `3312af4` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `eb03b9e` | security | 暫不採用，待維護者決定（安全性 hardening，延續 2026-09-12 決策的長期觀察清單，待上游穩定或維護者明確同意後再評估移植） |
 | `634c557` | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
 | `bae58cf` | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
 
@@ -92,47 +92,47 @@
 
 | PR | 分類 | 決策 |
 | --- | --- | --- |
-| #1856 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1858 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1860 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1862 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1864 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1866 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1868 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1870 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1872 | windows | 暫不採用，待主人決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
-| #1874 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1876 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1878 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1880 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1882 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1884 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1885 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1856 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1858 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1860 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1862 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1864 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1866 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1868 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1870 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1872 | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
+| #1874 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1876 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1878 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1880 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1882 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1884 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1885 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | #1889 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
-| #1894 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1894 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | #1896 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
 | #1898 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
 | #1900 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
 | #1901 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
-| #1902 | security | 暫不採用，待主人決定（安全性 hardening，延續 2026-09-12 決策的長期觀察清單，待上游穩定或主人明確同意後再評估移植） |
+| #1902 | security | 暫不採用，待維護者決定（安全性 hardening，延續 2026-09-12 決策的長期觀察清單，待上游穩定或維護者明確同意後再評估移植） |
 | #1903 | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
-| #1905 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1905 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | #1906 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
-| #1912 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1914 | feat | 暫不採用，待主人決定（新功能提案，非缺陷修復，需要主人評估是否引入） |
+| #1912 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1914 | feat | 暫不採用，待維護者決定（新功能提案，非缺陷修復，需要維護者評估是否引入） |
 | #1919 | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
-| #1921 | feat | 暫不採用，待主人決定（新功能提案，非缺陷修復，需要主人評估是否引入） |
-| #1922 | feat | 暫不採用，待主人決定（新功能提案，非缺陷修復，需要主人評估是否引入） |
-| #1923 | feat | 暫不採用，待主人決定（新功能提案，非缺陷修復，需要主人評估是否引入） |
-| #1925 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1926 | windows | 暫不採用，待主人決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
+| #1921 | feat | 暫不採用，待維護者決定（新功能提案，非缺陷修復，需要維護者評估是否引入） |
+| #1922 | feat | 暫不採用，待維護者決定（新功能提案，非缺陷修復，需要維護者評估是否引入） |
+| #1923 | feat | 暫不採用，待維護者決定（新功能提案，非缺陷修復，需要維護者評估是否引入） |
+| #1925 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1926 | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
 | #1928 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
 | #1929 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
 | #1930 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
 | #1931 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
 | #1932 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 相依性另由 tools/check_dependency_freshness.py 獨立追蹤，不逐筆跟進 lockfile bump） |
-| #1934 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1936 | windows | 暫不採用，待主人決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
+| #1934 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1936 | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
 
 共 41 筆 PR，全數 triage 完畢。
 
@@ -140,43 +140,43 @@
 
 | Issue | 分類 | 決策 |
 | --- | --- | --- |
-| #1854 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1855 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1857 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1859 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1861 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1863 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1865 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1867 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1869 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1871 | windows | 暫不採用，待主人決定（Windows 相容性直接相關，建議下次授權移植時優先評估） |
-| #1873 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1875 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1877 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1879 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1881 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1883 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1887 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1890 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1891 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1892 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1893 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1895 | windows | 暫不採用，待主人決定（Windows 相容性直接相關，建議下次授權移植時優先評估） |
-| #1897 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1899 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1904 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1907 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1908 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1909 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1910 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1913 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1915 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1917 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1918 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1920 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1924 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1927 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1935 | windows | 暫不採用，待主人決定（Windows 相容性直接相關，建議下次授權移植時優先評估） |
+| #1854 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1855 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1857 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1859 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1861 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1863 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1865 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1867 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1869 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1871 | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，建議下次授權移植時優先評估） |
+| #1873 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1875 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1877 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1879 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1881 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1883 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1887 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1890 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1891 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1892 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1893 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1895 | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，建議下次授權移植時優先評估） |
+| #1897 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1899 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1904 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1907 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1908 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1909 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1910 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1913 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1915 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1917 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1918 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1920 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1924 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1927 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1935 | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，建議下次授權移植時優先評估） |
 
 共 37 筆 issue，全數 triage 完畢。
 
@@ -193,45 +193,45 @@
   - `windows` = 與本 fork「Windows-first」維護宗旨直接相關（EPERM/CRLF/測試逾時等），列為優先候選但本次仍不動 `src/`。
   - `chore` = 相依性/CI/release 版務，交由 `tools/check_dependency_freshness.py` 獨立追蹤。
   - `docs` = 上游文件用語調整，不影響繁中主檔。
-  - `feat` = 新功能提案，需主人評估。
+  - `feat` = 新功能提案，需維護者評估。
   - `fix` = 一般性上游缺陷修復，未涉及本 fork 專屬骨架。
 
 ### Commits（逐筆，`reviewed_through` 推進至 `79b6aa9`）
 
 | Commit | 分類 | 決策 |
 | --- | --- | --- |
-| `518e1a0` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `518e1a0` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | `02fade2` | chore | 不適用（上游 CI 工作流相依更新，本 fork 獨立維護 CI 與工作流） |
-| `a64303f` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `0dde57b` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `a64303f` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `0dde57b` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | `416599a` | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
 | `91f2925` | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
 | `c681df7` | docs | 不適用（上游 Homebrew 安裝文件，不影響本 fork 繁中主檔） |
 | `e09916e` | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
-| `d3d7707` | windows | 暫不採用，待主人決定（Windows archive lock 相關，建議下次授權移植時優先評估；本次僅記錄 triage，不動 src/） |
-| `a5ceea3` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `5b55263` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `fe429a1` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `d3d7707` | windows | 暫不採用，待維護者決定（Windows archive lock 相關，建議下次授權移植時優先評估；本次僅記錄 triage，不動 src/） |
+| `a5ceea3` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `5b55263` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `fe429a1` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | `1d2f8f2` | docs | 不適用（上游社群文件調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
 | `2a8500a` | chore | 不適用（上游 website 相依性更新，本 fork 相依性另行獨立追蹤） |
 | `fe81461` | chore | 不適用（上游相依性更新，本 fork 相依性由 tools/check_dependency_freshness.py 獨立追蹤） |
-| `0b5ce44` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `fd56e12` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `0b5ce44` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `fd56e12` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | `02d8c24` | docs | 不適用（上游疑難排解文件，不影響本 fork 繁中主檔） |
 | `1515edb` | docs | 不適用（上游社群文件調整，不影響本 fork 繁中主檔） |
 | `f179ed4` | chore | 不適用（上游相依性更新，本 fork 相依性由 tools/check_dependency_freshness.py 獨立追蹤） |
-| `8826c0c` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `1d35e90` | windows | 暫不採用，待主人決定（Windows CRLF 換行保留相關，建議下次授權移植時優先評估；本次僅記錄 triage，不動 src/） |
-| `ed5d386` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `72fbe4c` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `f2812f6` | windows | 暫不採用，待主人決定（Windows EPERM 略過暫存拷貝相關，建議下次授權移植時優先評估；本次僅記錄 triage，不動 src/） |
-| `fb1b876` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `d6bdef6` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `072de6b` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| `3364146` | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `8826c0c` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `1d35e90` | windows | 暫不採用，待維護者決定（Windows CRLF 換行保留相關，建議下次授權移植時優先評估；本次僅記錄 triage，不動 src/） |
+| `ed5d386` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `72fbe4c` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `f2812f6` | windows | 暫不採用，待維護者決定（Windows EPERM 略過暫存拷貝相關，建議下次授權移植時優先評估；本次僅記錄 triage，不動 src/） |
+| `fb1b876` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `d6bdef6` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `072de6b` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| `3364146` | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | `7ac58dc` | chore | 不適用（上游 changeset 版務紀錄） |
 | `db23097` | chore | 不適用（上游 version packages 發版紀錄） |
-| `79b6aa9` | windows | 暫不採用，待主人決定（Windows 子進程測試 10s 逾時調整；本 fork 測試皆正常通過，本次僅記錄 triage） |
+| `79b6aa9` | windows | 暫不採用，待維護者決定（Windows 子進程測試 10s 逾時調整；本 fork 測試皆正常通過，本次僅記錄 triage） |
 
 共 32 筆 commit，全數 triage 完畢。
 
@@ -240,32 +240,32 @@
 | PR | 分類 | 決策 |
 | --- | --- | --- |
 | #1937 | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
-| #1938 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1939 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1940 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1938 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1939 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1940 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | #1941 | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
 | #1943 | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
-| #1944 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1944 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | #1945 | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
 | #1946 | docs | 不適用（上游文件用語調整，不影響本 fork 繁中主檔或 Windows 維護骨架） |
 | #1953 | chore | 不適用（上游相依性/CI/release 版務紀錄，本 fork 獨立維護） |
 | #1954 | chore | 不適用（上游相依性更新，本 fork 相依性由 tools/check_dependency_freshness.py 獨立追蹤） |
-| #1955 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1955 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | #1956 | docs | 不適用（上游文件提議，不影響本 fork 繁中主檔或 Windows 維護骨架） |
-| #1958 | windows | 暫不採用，待主人決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
-| #1961 | feat | 暫不採用，待主人決定（新工具支援提案，非缺陷修復，需要主人評估是否引入） |
-| #1962 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1958 | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，建議下次授權移植時優先評估；本次僅 triage 與 baseline 推進，不動 src/） |
+| #1961 | feat | 暫不採用，待維護者決定（新工具支援提案，非缺陷修復，需要維護者評估是否引入） |
+| #1962 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | #1963 | docs | 不適用（上游文件提議，不影響本 fork 繁中主檔或 Windows 維護骨架） |
 | #1964 | chore | 不適用（上游 changeset 版務紀錄） |
-| #1969 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1972 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1969 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1972 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | #1974 | docs | 不適用（上游社群工具文件調整，不影響本 fork 繁中主檔） |
-| #1977 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1978 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1977 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1978 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 | #1979 | docs | 不適用（上游文件提議，不影響本 fork 繁中主檔或 Windows 維護骨架） |
-| #1981 | windows | 暫不採用，待主人決定（Windows 相容性直接相關，調整測試逾時，建議下次授權移植時評估；本次僅記錄 triage，不動 src/） |
-| #1984 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
-| #1987 | fix | 暫不採用，待主人決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1981 | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，調整測試逾時，建議下次授權移植時評估；本次僅記錄 triage，不動 src/） |
+| #1984 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
+| #1987 | fix | 暫不採用，待維護者決定（一般性上游 bug fix，未涉及本 fork 專屬文件或 Windows 維護骨架，本次僅記錄 triage，不合併程式碼） |
 
 共 27 筆 PR，全數 triage 完畢。
 
@@ -273,28 +273,28 @@
 
 | Issue | 分類 | 決策 |
 | --- | --- | --- |
-| #1942 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
+| #1942 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
 | #1947 | docs | 不適用（上游文件需求，不影響本 fork 繁中主檔） |
-| #1948 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1949 | windows | 暫不採用，待主人決定（Windows 相容性直接相關，建議下次授權移植時優先評估） |
-| #1950 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1951 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1952 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1959 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1960 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1965 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
+| #1948 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1949 | windows | 暫不採用，待維護者決定（Windows 相容性直接相關，建議下次授權移植時優先評估） |
+| #1950 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1951 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1952 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1959 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1960 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1965 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
 | #1966 | docs | 不適用（上游文件建議，不影響本 fork 繁中主檔） |
 | #1967 | docs | 不適用（上游架構討論，不影響本 fork 繁中主檔） |
-| #1968 | feat | 暫不採用，待主人決定（功能探索/提案，需要主人評估是否引入） |
-| #1971 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1968 | feat | 暫不採用，待維護者決定（功能探索/提案，需要維護者評估是否引入） |
+| #1971 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
 | #1973 | chore | 不適用（上游測試性回饋 Issue，無實質內容） |
-| #1975 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1976 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
-| #1980 | feat | 暫不採用，待主人決定（功能探索/提案，需要主人評估是否引入） |
-| #1982 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
-| #1983 | feat | 暫不採用，待主人決定（功能請求/提案，需要主人評估是否引入） |
+| #1975 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1976 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1980 | feat | 暫不採用，待維護者決定（功能探索/提案，需要維護者評估是否引入） |
+| #1982 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
+| #1983 | feat | 暫不採用，待維護者決定（功能請求/提案，需要維護者評估是否引入） |
 | #1985 | docs | 不適用（上游設計探討，不影響本 fork 繁中主檔） |
-| #1986 | fix | 暫不採用，待主人決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
+| #1986 | fix | 暫不採用，待維護者決定（回報上游既有缺陷，未涉及本 fork 專屬骨架，未合併任何程式碼修正） |
 
 共 22 筆 issue，全數 triage 完畢。
 
@@ -302,7 +302,7 @@
 
 ## 2026-09-28：合併 PR #2（升級 Vitest 4 與安全修復）與上游最新 Triage
 
-- **背景**：主人授權合併 PR #2（`security/vitest-4`），並清理遠端多餘分支，最終只留 `main`。同時檢出上游新進 2 筆 PR（#1990, #1991）與 2 筆 Issue（#1988, #1989）並完成 triage。
+- **背景**：維護者授權合併 PR #2（`security/vitest-4`），並清理遠端多餘分支，最終只留 `main`。同時檢出上游新進 2 筆 PR（#1990, #1991）與 2 筆 Issue（#1988, #1989）並完成 triage。
 - **PR #2 合併決策**：
   - 升級 `vitest` 與 `@vitest/ui` 至 `^4.1.11`，修復 Dependabot 漏洞警告（#1、#3、#4）。
   - 修復 `test/commands/completion.test.ts` 以相容 Vitest 4 constructor mock 規格。
@@ -336,3 +336,23 @@
 | Issue #1993 Apply workflow cannot map aggregated tasks back to custom-schema files | bug | 跟隨上游（由 #1994 處理） |
 
 `reviewed_pr_through` 推進至 `#1996`，`reviewed_issue_through` 推進至 `#1993`。
+
+## 2026-09-29：採用上游 #2004
+
+- `d4e1c77e` fix(cleanup): clarify legacy file deletion warning — **採用**（cherry-pick）。刪除舊檔前的提示改為「整個刪除、請先備份」，不再宣稱沒有使用者內容；只改提示字串與測試。
+- `reviewed_through` 推進至 `d4e1c77e`。
+
+| 項目 | 判定 |
+| --- | --- |
+| PR #1997 fix(propose): guide capability naming | 跟隨上游（OPEN，合併後隨 commit 帶入） |
+| PR #1998 docs(archive): document retention options | 跟隨上游（OPEN） |
+| PR #1999 fix(init): guide project.md migration | 跟隨上游（OPEN） |
+| PR #2001 feat(cli): report version and update metadata | 跟隨上游（OPEN，+877 的功能，合併後再評估） |
+| PR #2002 docs(schemas): document Superpowers community bridge | 跟隨上游（OPEN） |
+| PR #2003 docs(root): propose custom OpenSpec directory | 跟隨上游（OPEN，提案文件） |
+| PR #2004 fix(cleanup): clarify legacy file deletion warning | 已採用（見上） |
+| PR #2005 chore(release): version packages | 不適用（本 fork 不發行 npm） |
+| Issue #2000 Feedback: test | 不適用（測試用回饋，無內容） |
+| Issue #2006 archive `--yes` skips the incomplete-task stop | 跟隨上游（行為缺陷回報，等上游修正帶入） |
+
+`reviewed_pr_through` 推進至 `#2005`，`reviewed_issue_through` 推進至 `#2006`。
