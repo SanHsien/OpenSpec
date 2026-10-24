@@ -47,7 +47,8 @@ pnpm exec vitest run test/fork-hygiene.test.ts
 
 - 一般變更直接推 `origin/main`，不開功能分支、不開維護 PR。只有在需要他人審查、或改動風險高到值得先讓 CI 在 PR 上跑一輪時，才退回 **branch → PR → CI → merge**。
 - 修 bug 先補可重現失敗測試，再做最小修正。
-- 使用繁體中文回覆；使用者文件以繁中為主，公開入口同步維護 `README.en.md`。
+- 提交前必須執行 `pwsh -NoProfile -File tools\dev_check.ps1` 並確保綠燈。
+- 使用繁體中文回覆，術語與 API 維持英文；使用者文件以繁中為主，公開入口同步維護 `README.en.md`。
 - 上游更新英文 `README.md` 時：把新內容併進 `README.en.md`，再翻進繁中 `README.md`。
 - 提交訊息用 Conventional Commit。Dependabot 或外部 fork 的變更走 PR，讀 diff 並通過 CI 後再合併。
 - `REVIEW.md` 是風險快照，不是每個一般 bug 的流水帳。
@@ -78,7 +79,7 @@ pwsh -NoProfile -File tools\bootstrap_dev.ps1
 pwsh -NoProfile -File tools\dev_check.ps1
 ```
 
-沒有實際跑過 Windows gate，不要宣稱本機開發環境已可用。
+沒有實際跑過 Windows gate，不要宣稱本機開發環境已可用。回報「完成／修好／測試通過」之前，必須實際執行驗證並提供指令輸出。
 
 ## 文件責任
 

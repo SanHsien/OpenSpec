@@ -19,7 +19,7 @@
 | 項目 | 說明 |
 |---|---|
 | `README.md` | 繁中主檔；上游英文移到 `README.en.md` |
-| `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` | 本 fork 的 AI 維護單一真相源 |
+| `AGENTS.md` / `CLAUDE.md` | 本 fork 的 AI 維護單一真相源 |
 | `NOTICE.md` / `FORK.md` | 來源、授權與同步說明 |
 | `tools/dev_check.ps1` | Windows 本機一鍵門禁（格式檢查、依賴檢查、契約測試、Markdown 連結檢查） |
 | `tools/bootstrap_dev.ps1` | Windows 本機一鍵環境初始化與驗收 |

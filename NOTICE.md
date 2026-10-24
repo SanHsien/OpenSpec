@@ -17,7 +17,7 @@ This product includes software developed by the OpenSpec project
 1. **Windows 11 原生環境適配**：建立專屬 Windows 開發門禁、路徑與檔案系統相容性測試。
 2. **多語言與文件體系**：提供繁體中文主入口說明（`README.md`），原始英文保留於 `README.en.md`。
 3. **維護骨架與自動化**：
-   - 增加 `FORK.md`、`AGENTS.md`、`CLAUDE.md`、`GEMINI.md`、`REVIEW.md`。
+   - 增加 `FORK.md`、`AGENTS.md`、`CLAUDE.md`、`REVIEW.md`。
    - 增加 `docs/DEVELOPMENT.md`、`docs/DECISIONS.md`、`docs/UPSTREAM.md`。
    - 增加 `tools/dev_check.ps1`、`tools/bootstrap_dev.ps1`、`tools/check_links.py`、`tools/check_upstream_updates.py`、`tools/check_dependency_freshness.py`、`tools/upstream_baseline.json`。
    - 增加 `test/fork-hygiene.test.ts` 契約測試。
