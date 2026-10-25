@@ -1,4 +1,4 @@
-import ora from 'ora';
+import type { Ora } from 'ora';
 import path from 'path';
 import { Validator } from '../core/validation/validator.js';
 import { VALIDATION_MESSAGES } from '../core/validation/constants.js';
@@ -9,13 +9,14 @@ import {
   type ResolvedOpenSpecRoot,
   isStoreSelectedRoot,
 } from '../core/root-selection.js';
-import { isInteractive, resolveNoInteractive } from '../utils/interactive.js';
+import { canRenderSpinner, isInteractive, resolveNoInteractive } from '../utils/interactive.js';
 import { getSpecIds } from '../utils/item-discovery.js';
 import { getAvailableChanges } from './workflow/shared.js';
 import { nearestMatches } from '../utils/match.js';
 import { promises as fs } from 'fs';
 import { getTaskProgressDetailForChange, type SchemaGlobCache } from '../utils/task-progress.js';
 import { FileSystemUtils } from '../utils/file-system.js';
+import { readConfigParseError } from '../core/project-config.js';
 
 type ItemType = 'change' | 'spec';
 
@@ -107,6 +108,22 @@ export class ValidateCommand {
       ...(bulk ? { allowImplicitRoot: false } : {}),
     });
     if (!root) {
+      return;
+    }
+
+    // Every other command ignores an unparseable config with a warning, so
+    // validate is where CI has to catch it.
+    const configError = readConfigParseError(root.path);
+    if (configError) {
+      const message = `Could not parse ${configError.filePath} (${configError.message}).`;
+      const fix = `Fix the YAML syntax in ${configError.filePath}.`;
+      if (options.json) {
+        console.log(JSON.stringify({ status: [{ severity: 'error', code: 'unparseable_config', message, fix }] }, null, 2));
+      } else {
+        console.error(`Error: ${message}`);
+        console.error(`Fix: ${fix}`);
+      }
+      process.exitCode = 1;
       return;
     }
 
@@ -376,7 +393,11 @@ export class ValidateCommand {
   }
 
   private async runBulkValidation(root: ResolvedOpenSpecRoot, scope: { changes: boolean; specs: boolean }, opts: { strict: boolean; json: boolean; concurrency?: string; noInteractive?: boolean; findingsScope?: BulkScope }): Promise<void> {
-    const spinner = !opts.json && !opts.noInteractive ? ora('Validating...').start() : undefined;
+    let spinner: Ora | undefined;
+    if (!opts.json && isInteractive(opts) && canRenderSpinner()) {
+      const { default: ora } = await import('ora');
+      spinner = ora('Validating...').start();
+    }
     const [changeIds, specIds] = await Promise.all([
       scope.changes ? this.listChangeIds(root) : Promise.resolve<string[]>([]),
       scope.specs ? getSpecIds(root.path) : Promise.resolve<string[]>([]),
@@ -540,7 +561,11 @@ export class ValidateCommand {
     // List first (may throw on a real archive-read failure), then start the
     // spinner so a thrown error never leaves a spinner spinning.
     const ids = await this.listArchivedChangeIds(root);
-    const spinner = !opts.json && !opts.noInteractive ? ora('Validating archived changes...').start() : undefined;
+    let spinner: Ora | undefined;
+    if (!opts.json && isInteractive(opts) && canRenderSpinner()) {
+      const { default: ora } = await import('ora');
+      spinner = ora('Validating archived changes...').start();
+    }
 
     // The archive is append-only and can hold thousands of changes; a single
     // run resolves them all under one constant projectRoot (root.path), so

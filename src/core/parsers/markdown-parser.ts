@@ -1,5 +1,6 @@
 import { Spec, Change, Requirement, Scenario, Delta, DeltaOperation } from '../schemas/index.js';
 import { buildCodeFenceMask, extractRequirementText } from './requirement-text.js';
+import { stripClosingSequence } from './heading.js';
 
 export interface Section {
   level: number;
@@ -92,7 +93,7 @@ export class MarkdownParser {
       
       if (headerMatch) {
         const level = headerMatch[1].length;
-        const title = headerMatch[2].trim();
+        const title = stripClosingSequence(headerMatch[2]);
         const content = this.getContentUntilNextHeader(i + 1, level);
         
         const section: Section = {

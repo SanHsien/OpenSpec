@@ -74,10 +74,13 @@ ${STORE_SELECTION_GUIDANCE}
      - \`skipped\`/\`warning\`: present when the change declares skip_specs and this artifact must NOT be created - pick another artifact
    - **Create the artifact file**:
      - Read any completed dependency files for context - always re-read them from disk, even if you saw them earlier in the conversation (the user may have edited them)
-     - If the \`instruction\` field delegates creation to a specific skill or command, invoke it to produce the artifact instead of writing the file yourself, then verify the artifact file exists at \`resolvedOutputPath\`
-     - Otherwise use \`template\` as the structure - fill in its sections
-     - Apply \`context\` and \`rules\` as constraints when writing - but do NOT copy them into the file
-     - Write to the \`resolvedOutputPath\` specified in instructions. If it is a glob pattern, choose the concrete file path using the schema instruction and the change's context
+     - Choose the output path before creating anything. If the \`resolvedOutputPath\` specified in instructions is a glob pattern, choose a concrete path inside \`changeRoot\` using the schema instruction and the change's context, and verify it remains inside \`changeRoot\` after resolving symlinks, both in its parent directories and in the file itself if it already exists; if it does not, stop and tell the user. Otherwise the output path is \`resolvedOutputPath\`
+     - If the \`instruction\` field delegates creation to a specific skill or command, invoke it only if it can write the artifact to that output path; otherwise stop and tell the user
+     - Otherwise, write it yourself:
+       - Use \`template\` as the structure - fill in its sections
+       - Apply \`context\` and \`rules\` as constraints when writing - but do NOT copy them into the file
+       - Write the file to that output path
+     - Either way, verify the artifact file exists at that output path
    - Show what was created and what's now unlocked
    - STOP after creating ONE artifact
 
@@ -105,7 +108,7 @@ After each invocation, show:
 
 The artifact types and their purpose depend on the schema. The \`instruction\` field from the instructions output is the authoritative guidance for each artifact - follow it even when the artifact has a familiar name (proposal.md, tasks.md, etc.), since custom schemas may define different content or a different process for the same file names.
 
-If the \`instruction\` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly.
+If the \`instruction\` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly - but only once you have chosen and checked the output path, and only if it can write there.
 
 **Guardrails**
 - Create ONE artifact per invocation
@@ -192,10 +195,13 @@ ${STORE_SELECTION_GUIDANCE}
      - \`skipped\`/\`warning\`: present when the change declares skip_specs and this artifact must NOT be created - pick another artifact
    - **Create the artifact file**:
      - Read any completed dependency files for context - always re-read them from disk, even if you saw them earlier in the conversation (the user may have edited them)
-     - If the \`instruction\` field delegates creation to a specific skill or command, invoke it to produce the artifact instead of writing the file yourself, then verify the artifact file exists at \`resolvedOutputPath\`
-     - Otherwise use \`template\` as the structure - fill in its sections
-     - Apply \`context\` and \`rules\` as constraints when writing - but do NOT copy them into the file
-     - Write to the \`resolvedOutputPath\` specified in instructions. If it is a glob pattern, choose the concrete file path using the schema instruction and the change's context
+     - Choose the output path before creating anything. If the \`resolvedOutputPath\` specified in instructions is a glob pattern, choose a concrete path inside \`changeRoot\` using the schema instruction and the change's context, and verify it remains inside \`changeRoot\` after resolving symlinks, both in its parent directories and in the file itself if it already exists; if it does not, stop and tell the user. Otherwise the output path is \`resolvedOutputPath\`
+     - If the \`instruction\` field delegates creation to a specific skill or command, invoke it only if it can write the artifact to that output path; otherwise stop and tell the user
+     - Otherwise, write it yourself:
+       - Use \`template\` as the structure - fill in its sections
+       - Apply \`context\` and \`rules\` as constraints when writing - but do NOT copy them into the file
+       - Write the file to that output path
+     - Either way, verify the artifact file exists at that output path
    - Show what was created and what's now unlocked
    - STOP after creating ONE artifact
 
@@ -223,7 +229,7 @@ After each invocation, show:
 
 The artifact types and their purpose depend on the schema. The \`instruction\` field from the instructions output is the authoritative guidance for each artifact - follow it even when the artifact has a familiar name (proposal.md, tasks.md, etc.), since custom schemas may define different content or a different process for the same file names.
 
-If the \`instruction\` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly.
+If the \`instruction\` field directs you to use a specific skill or command to create the artifact, invoke it instead of writing the artifact directly - but only once you have chosen and checked the output path, and only if it can write there.
 
 **Guardrails**
 - Create ONE artifact per invocation

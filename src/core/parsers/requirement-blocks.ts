@@ -39,7 +39,7 @@ export function extractRequirementsSection(content: string): RequirementsSection
   const normalized = normalizeLineEndings(content);
   const lines = normalized.split('\n');
   const fenceMask = buildCodeFenceMask(lines);
-  const reqHeaderIndex = lines.findIndex((l, i) => !fenceMask[i] && /^##\s+Requirements\s*$/i.test(l));
+  const reqHeaderIndex = lines.findIndex((l, i) => !fenceMask[i] && /^##\s+Requirements(?:[ \t]+#+)?\s*$/i.test(l));
 
   if (reqHeaderIndex === -1) {
     // No requirements section; create an empty one at the end

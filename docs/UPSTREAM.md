@@ -37,11 +37,11 @@ upstream  https://github.com/Fission-AI/OpenSpec.git (fetch & push)
 
 ## 最近一次審查
 
-- **日期**：2026-10-09
-- **Commit 水位**：`9111a7654d7800391459431fff4eaf66e33a3d2e`
-- **PR 水位**：`#2064`
-- **Issue 水位**：`#2059`
-- **處置**：逐筆結論記於 `docs/DECISIONS.md`；新增 #2062 公開文件導引重整、#2063 x- metadata 診斷契約與 #2064 completion／telemetry 啟動效能皆延後，已取得實際 diff 與 head SHA；#2064 重訪條件為獨立 CLI 效能任務或採用 lazy CLI 前置架構。本次採用網站安全相依版本與以 `glob@13` 取代無修補 `braces@3` 的鏈；其他上游產品功能維持延後，未合併上游程式碼。
+- **日期**：2026-10-26
+- **Commit 水位**：`6d04a1b58dedc95729d34e4f223d9d483aae210a`
+- **PR 水位**：`#2142`
+- **Issue 水位**：`#2147`
+- **處置**：逐筆結論記於 `docs/DECISIONS.md`（2026-10-26 節）。採用 vitest／vite／launch-editor 安全升級、Actions SHA 更新，以及 #2108、#2120、#2086、#2104、#2131、#2133、#2127、issue #2145 的修正做法；#2083／#2114／#2119 因缺陷在本 fork 不存在而跳過；symlink、update 重構、standalone binaries、beta skills 等產品面延後並寫明重訪條件。
 
 ## 基線檔案結構 (`tools/upstream_baseline.json`)
 

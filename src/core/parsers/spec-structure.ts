@@ -1,9 +1,12 @@
 import { buildCodeFenceMask } from './code-fence.js';
 
-const REQUIREMENTS_SECTION_HEADER = /^##\s+Requirements\s*$/i;
+// A closing `#` run is not part of the heading (`## Requirements ##`).
+const REQUIREMENTS_SECTION_HEADER = /^##\s+Requirements(?:[ \t]+#+)?\s*$/i;
 const TOP_LEVEL_SECTION_HEADER = /^##\s+/;
 const DELTA_HEADER = /^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements\s*$/i;
-const REQUIREMENT_HEADER = /^###\s+Requirement:\s*(.+)\s*$/i;
+// `\s*`, not `\s+`: the requirement reader (requirement-blocks.ts) accepts
+// `###Requirement: Foo`, so this check has to see the same headers.
+const REQUIREMENT_HEADER = /^###\s*Requirement:\s*(.+)\s*$/i;
 
 export interface MainSpecStructureIssue {
   kind: 'delta-header' | 'requirement-outside-requirements' | 'duplicate-requirement';

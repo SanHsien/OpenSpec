@@ -19,6 +19,15 @@ function getFenceMarker(line: string): ActiveFence | null {
     return null;
   }
 
+  // CommonMark: the info string of a backtick fence may not contain a backtick,
+  // so a line like ```npm test``` is inline code, not a fence opener. Treating
+  // it as one masks every following line and hides later requirements. Tilde
+  // fences have no such restriction. The info string is sliced off rather than
+  // matched with `.*$`, so a trailing CR on a CRLF line cannot defeat the check.
+  if (fenceMatch[1][0] === '`' && line.slice(fenceMatch[0].length).includes('`')) {
+    return null;
+  }
+
   return {
     marker: fenceMatch[1][0] as '`' | '~',
     length: fenceMatch[1].length,

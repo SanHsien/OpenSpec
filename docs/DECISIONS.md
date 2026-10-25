@@ -517,3 +517,57 @@ PR 水位推進至 `#2063` 只代表以上兩筆已完成審查；Commit 水位�
 - **判定：延後**。本 fork CLI 仍採 eager telemetry／commands imports，先前 `bfa670e` lazy CLI 與 #2026 CLI perf 已延後；此 PR 是同一啟動效能架構的後續，單獨摘取不能套用其 48-module 成果或保證 hook／first-run notice 行為。它不是本次依賴與 confinement 安全修正所需功能。上游此 head 的跨平台 Test、Nix、lint/type、audit checks 成功；作者提供 macOS timing，均不代替本 fork Windows 驗收。
 - **重訪條件**：使用者啟動獨立 CLI 啟動／completion 效能工作，或本 fork 決定採用 deferred lazy CLI 前置架構時連同 #2064 重審；需 Windows 原生 module-load／timing、`__complete` 三種類型輸出一致、telemetry notice／flush 與 completion install/uninstall hook 回歸。
 - PR 水位推進至 `#2064` 只代表已審查，Commit／Issue 水位不變；未合併 PR 產品 source。只重驗 links、fork hygiene 與 strict upstream checker，安全與 metadata 程式／測試 hash 保持不變。
+
+
+## 2026-10-26：上游三軸審查（commit `9111a76`→`6d04a1b`、PR #2065–#2142、Issue #2060–#2147）與 vitest／vite 安全升級
+
+### 安全依賴
+
+- 採用 #2141 做法：`vitest`／`@vitest/ui` 升 `^4.1.12`（`@vitest/mocker` 4.1.12，清 GHSA-qxg6-89mg-rqv8、GHSA-xp26-3454-mjgp），`vite` 宣告為直接 devDependency `^7.3.7`（清 Dependabot #9／#10／#11，修補版 7.3.7），`pnpm-workspace.yaml` 加 `launch-editor@<2.14.2` override。`pnpm install` 後 `vite 7.3.7`、`vitest 4.1.12`。
+- #2085 shell-quote：本 fork 已有同一 override，略過。#2096 `compression`、#2140 `next` 16.4.2：Dependabot 對 website 無 open alert，本 fork `next` 為 16.3.8；延後，觸發條件為 website 出現 open alert 或 Dependabot 開新 PR。
+- 一般依賴版本（#2071／#2072／#2073／#2122–#2125／#2124）：鎖檔以 caret 範圍解析，無對應安全警示，由 Dependabot 與 `Dependency Freshness` 追蹤；不手動追。
+- #2121 Actions SHA 更新：採用。以 `gh api` 驗證 `actions/setup-node` v7.1.0＝`949feb24…`、`actions/upload-artifact` v7.0.2＝`cf430e03…`、`actions/create-github-app-token` v3＝`64ab729a…` 後套用到 ci／release-prepare／security。
+
+### 採用（移植做法並補測試，來源 PR 的 head 已做判準八掃描）
+
+| 上游 | 結論 |
+| --- | --- |
+| #2108（issue #2106） | 採用：本 fork `validate` 只看 `!opts.noInteractive` 即啟動 ora；新增 `canRenderSpinner`，零寬度 TTY 不啟動 spinner，ora 改動態 import。 |
+| #2120 | 採用：進度行的 schema 於 `--schema`／config／root default 解析一次再交給 `createChange`。 |
+| #2086 | 採用：explore 的 capture table 限預設 schema；同步 `skills/openspec-explore/SKILL.md` 與模板、parity 測試。 |
+| #2104（issue #2099） | 採用：continue／propose／ff／explore 的 glob artifact 路徑先限在 `changeRoot` 內；`update-change` 在本 fork 不是寫入面，不套用。新增 42 個測試，修改前全紅。 |
+| #2131（head `302de0f9f4a1dc32ee198cbcd730c5ab587e88e7`，issue #2130） | 採用做法、自行實作：info string 含反引號不開 fence。刻意不照抄 PR 的 `(.*)$` 正則：JS 的 `.` 不匹配 `\r`，CRLF 行會整個認不出 fence；改為切 info string。判準八掃描無命中。 |
+| #2133（head `aeec4f3f61a22e481d4892aca2a5717197cbb26f`，issue #2132） | 採用：reader 已用 `\s*`，`spec-structure.ts` 仍是 `\s+`，統一為 `\s*`。判準八掃描無命中。 |
+| #2127（head `e03319c695aa889ed32a209468326677d24b4df1`） | 採用：`config.yaml` 無法解析時 `validate` 以 exit 1 回報（`--json` 為 `unparseable_config`）。判準八掃描無命中。 |
+| issue #2145 | 採用：`## Purpose ##`、`## Requirements ##` 於本 fork 實際重現失敗；新增 `stripClosingSequence`，保留 `C#`。 |
+
+### 跳過（缺陷在本 fork 不存在，附證據）
+
+- #2083、#2114、issue #2067／#2098：本 fork `src/core/templates/workflows/verify-change.ts` 完全沒有 REMOVED／RENAMED 處理（上游 #1962 不在本 fork），沒有可修正的 baseline 比對文字；`update-change.ts` 禁止在 glob artifact 下建檔，沒有 #2083 要解除的新檔流程。附帶觀察：本 fork 的 verify 把所有 REMOVED 都當 CRITICAL，屬缺少上游功能，非這些 commit 的缺陷；重訪條件為決定採用上游 #1962 時。
+- issue #2119（BOM）：以 `dist` 實測 BOM、BOM+CRLF 的 spec 皆可解析，本 fork 的 regex 內含字面 U+FEFF，不重現。
+- #2103（fast-glob→tinyglobby）：本 fork 已於 2026-10-09 以 `glob@13` 取代 `fast-glob`／`braces`（見前節），依賴鏈已無 braces，不需再換。
+
+### 延後（含觸發條件）
+
+| 上游 | 理由／重訪條件 |
+| --- | --- |
+| #2062、#2063、#2064（commit 已抵達） | 沿用 2026-10-09 結論。 |
+| #2052、#2074、#2101、#2135、issue #2100 | symlink archive／main spec symlink：與本 fork 的路徑 confinement 立場相反（拒絕指向專案外或 symlink 的目標）；重訪條件為維護者明確要支援 symlink 目錄。 |
+| #2054 | archive 行為變更；沿用前次結論。 |
+| #2109（issue #2088）、#2087、#2089 | `update --dry-run`／update 重構：`update.ts` 與上游分歧 470 行以上，需獨立任務；重訪條件為處理 update 流程時。 |
+| #2091、#2092 | Amazon Q／CoStrict 交付路徑修正（open PR，依賴上游 update 重構）；重訪條件同上，並先確認缺陷在本 fork 存在。 |
+| #2116 | ora lazy import 的效能改動，與 #2064 同屬 CLI 啟動效能工作；本次僅在 validate 為 #2108 動態 import。 |
+| #2134（beta skills）、#2137（standalone binaries，含 `binaries.yml` 發布流程） | 產品功能；#2137 涉及發佈管道，本 fork 不發佈。重訪條件為維護者要散佈獨立執行檔。 |
+| #2077／#2080（store discovery）、#2079（scenario 無 WHEN/THEN 警告，issue #2078）、issue #2069／#2076／#2084／#2105／#2115／#2126／#2139／#2147 | 新功能或需求提案，不是缺陷；無 Windows 或 CJK 專屬面。 |
+| issue #2138（`completion install zsh` 與 `$ZDOTDIR`） | zsh 在 Windows 原生環境不適用；重訪條件為支援 zsh 的使用者回報。 |
+| issue #2117 | 已由 #2120 處理。 |
+| #2128／#2129、#2065 | 上游自己的 openspec/ 內容整理，本 fork 不同步。 |
+| #981（CI 加 Node 22／24 矩陣，commit `8153fc5`） | 增加每次 CI 成本；本 fork 以 `engines` 最低版為準。重訪條件為 Node 22／24 出現回歸。 |
+
+### 略過（上游社群／發佈／網站）
+
+#2071–#2073 類 Dependabot 群組已於上方；#2081、#2090、#2094、#2095、#2107、#2143、issue #2082（社群文件）、#2093／#2112／#2136（release）、#2110（website preview）、#2113、#2142（favicon）、issue #2111（誤建）。
+
+### 水位
+
+Commit `9111a76`→`6d04a1b`；PR `#2064`→`#2142`；Issue `#2059`→`#2147`。
