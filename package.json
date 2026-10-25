@@ -81,7 +81,7 @@
     "glob": "^13.0.6",
     "ora": "^9.4.1",
     "yaml": "^2.8.3",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
