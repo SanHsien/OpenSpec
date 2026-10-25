@@ -524,7 +524,7 @@ PR 水位推進至 `#2063` 只代表以上兩筆已完成審查；Commit 水位�
 ### 安全依賴
 
 - 採用 #2141 做法：`vitest`／`@vitest/ui` 升 `^4.1.12`（`@vitest/mocker` 4.1.12，清 GHSA-qxg6-89mg-rqv8、GHSA-xp26-3454-mjgp），`vite` 宣告為直接 devDependency `^7.3.7`（清 Dependabot #9／#10／#11，修補版 7.3.7），`pnpm-workspace.yaml` 加 `launch-editor@<2.14.2` override。`pnpm install` 後 `vite 7.3.7`、`vitest 4.1.12`。
-- #2085 shell-quote：本 fork 已有同一 override，略過。#2096 `compression`、#2140 `next` 16.4.2：Dependabot 對 website 無 open alert，本 fork `next` 為 16.3.8；延後，觸發條件為 website 出現 open alert 或 Dependabot 開新 PR。
+- #2085 shell-quote：本 fork 已有同一 override，略過。#2096 `compression`：本 fork 已有 `compression@<1.8.2` override，略過。#2140 `next`：推送後 Dependabot 重掃 website 出現 12 個 open alert（next 16.3.8 受 GHSA 影響，修補版 16.4.1；zod <4.6.6；fast-uri <3.1.9），原先「無 alert」的判斷已過時，改為採用：website `next` 16.4.2、`zod` ^4.6.7、override `fast-uri@<3.1.9 → ^3.1.9`；`pnpm run build`（website）與 dev_check 綠；取代 Dependabot PR #4／#5。
 - 一般依賴版本（#2071／#2072／#2073／#2122–#2125／#2124）：鎖檔以 caret 範圍解析，無對應安全警示，由 Dependabot 與 `Dependency Freshness` 追蹤；不手動追。
 - #2121 Actions SHA 更新：採用。以 `gh api` 驗證 `actions/setup-node` v7.1.0＝`949feb24…`、`actions/upload-artifact` v7.0.2＝`cf430e03…`、`actions/create-github-app-token` v3＝`64ab729a…` 後套用到 ci／release-prepare／security。
 
