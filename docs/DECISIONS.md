@@ -571,3 +571,12 @@ PR 水位推進至 `#2063` 只代表以上兩筆已完成審查；Commit 水位�
 ### 水位
 
 Commit `9111a76`→`6d04a1b`；PR `#2064`→`#2142`；Issue `#2059`→`#2147`。
+
+## 2026-10-26（第二輪補審）
+
+上游 PR #2148–#2154 全是 Dependabot 依賴升級，無 commit 抵達。逐筆結論：
+
+- #2148（@inquirer/core 12.0.5）、#2150（eslint 10.13.0）、#2149（Actions 群組）、#2153（website 群組）：本 fork 有自己的 Dependabot 與 Actions SHA 釘選，由本 fork 自己的 PR 處理，不照搬上游。
+- #2151／#2152（vitest／@vitest/ui 5.0.2）、#2154（vite 8.3.1）：大版本跳升，本 fork 剛於 `7d38a769` 固定在 vitest 4.1／vite 7.3 以清除安全警示；重訪條件為 vitest 5 與 vite 8 的 peer 範圍互相相容且全套測試通過時。
+
+水位：PR `#2142`→`#2154`；Issue 不變（`#2147`）。
