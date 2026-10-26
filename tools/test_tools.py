@@ -60,9 +60,7 @@ class LinkCheckerTests(unittest.TestCase):
         self.assertEqual(len(problems), 1)
 
     def test_underscore_is_kept_in_anchor(self) -> None:
-        self.assertEqual(self.check("# Hello_World
-
-[x](#hello_world)"), [])
+        self.assertEqual(self.check("# Hello_World\n\n[x](#hello_world)"), [])
 
     def test_missing_file_is_reported(self) -> None:
         self.assertEqual(len(self.check("[a](nope.md)")), 1)
