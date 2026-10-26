@@ -56,7 +56,7 @@ def strip_code_fences(text: str) -> str:
 
 def slugify(heading: str) -> str:
     """GitHub-style heading anchor: lowercase, drop punctuation, spaces to hyphens."""
-    heading = re.sub(r"[`*_~]", "", heading.strip().lower())
+    heading = re.sub(r"[`*~]", "", heading.strip().lower())
     heading = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", heading)
     heading = re.sub(r"[^\w\s-]", "", heading)
     return re.sub(r"\s", "-", heading)
