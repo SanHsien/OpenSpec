@@ -27,6 +27,7 @@ function Invoke-Step {
 }
 
 Invoke-Step -Label "Compile maintained Python tools" -Command "python" -Arguments @("-m", "compileall", "-q", "tools")
+Invoke-Step -Label "Maintainer tool tests" -Command "python" -Arguments @("-m", "unittest", "discover", "-s", "tools", "-p", "test_*.py")
 Invoke-Step -Label "Check Markdown links" -Command "python" -Arguments @("tools/check_links.py")
 Invoke-Step -Label "Fork hygiene contract tests" -Command "pnpm" -Arguments @("exec", "vitest", "run", "test/fork-hygiene.test.ts")
 Invoke-Step -Label "Upstream baseline watermark check" -Command "python" -Arguments @("tools/check_upstream_updates.py", "--strict")

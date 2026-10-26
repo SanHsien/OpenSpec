@@ -23,6 +23,7 @@ describe('fork maintainer overlay files', () => {
       'tools/check_links.py',
       'tools/check_upstream_updates.py',
       'tools/check_dependency_freshness.py',
+      'tools/test_tools.py',
       'tools/upstream_baseline.json',
       '.cursor/rules/no-upstream-pr.mdc',
       '.github/pull_request_template.md',

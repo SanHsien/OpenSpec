@@ -35,12 +35,19 @@ def load_baseline(path: Path = BASELINE_PATH) -> dict:
         baseline = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError) as exc:
         raise UpstreamCheckError(f"invalid baseline file: {path}: {exc}") from exc
+    if not isinstance(baseline, dict):
+        raise UpstreamCheckError(f"invalid baseline file: {path}: expected a JSON object")
     required = {"repo", "branch", "reviewed_through", "reviewed_date"}
     missing = sorted(required - baseline.keys())
     if missing:
         raise UpstreamCheckError(f"baseline missing fields: {', '.join(missing)}")
-    if len(baseline["reviewed_through"]) != 40:
+    through = baseline["reviewed_through"]
+    if not isinstance(through, str) or not re.fullmatch(r"[0-9a-f]{40}", through):
         raise UpstreamCheckError("reviewed_through must be a full 40-character SHA")
+    for key in ("reviewed_pr_through", "reviewed_issue_through"):
+        value = baseline.get(key, 0)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise UpstreamCheckError(f"{key} must be a non-negative integer")
     return baseline
 
 
