@@ -580,3 +580,15 @@ Commit `9111a76`→`6d04a1b`；PR `#2064`→`#2142`；Issue `#2059`→`#2147`。
 - #2151／#2152（vitest／@vitest/ui 5.0.2）、#2154（vite 8.3.1）：大版本跳升，本 fork 剛於 `7d38a769` 固定在 vitest 4.1／vite 7.3 以清除安全警示；重訪條件為 vitest 5 與 vite 8 的 peer 範圍互相相容且全套測試通過時。
 
 水位：PR `#2142`→`#2154`；Issue 不變（`#2147`）。
+
+## 2026-10-26（第三輪補審）：上游 issue #2155–#2157
+
+上游自第二輪補審之後只多三筆 issue，沒有新 commit、沒有新 PR（`gh pr list --state all` 最高仍是 #2154，上游 `main` 仍是 `6d04a1b`）。三筆都是 open、無維護者回應、無對應 PR，所以沒有「PR 目前的 head」可取；issue 本文與留言實查無 HTML 註解（`<!--` 命中 0），#2155 附的 `openspec-quality-gate.md`（82 行）也下載為純資料檢視過，沒有指令或外連，只是一份 skill 提案文字。三筆都不採用：
+
+| 上游 | 結論 | 證據與觸發條件 |
+| --- | --- | --- |
+| issue #2155（新增 `openspec-quality-gate` skill） | 不採用 | 新功能提案，作者只表示「若維護者有意願就送 PR」，上游標籤仍是 `needs-triage`。本 fork 的內建 skill 清單由 `src/core/templates/workflows/` 與 `src/core/shared/skill-generation.ts` 產生，沒有對應缺陷可修；新增內建 skill 會改變所有使用者的 `openspec init`／`update` 輸出。重訪條件：上游合併該 skill（會經 commit 軸抵達）。 |
+| issue #2156（Pi 的 skill 加 `disable-model-invocation: true`） | 不採用 | 要求改變預設行為，作者自己寫明這會讓依賴自然語言自動探索的 Pi 使用者失去該能力，並請維護者決定預設值，上游尚無決定。本 fork 現況：`grep -rn disable-model-invocation src docs test schemas` 0 命中；`src/core/command-generation/adapters/pi.ts` 只產生 `.pi/prompts/opsx-*.md`（frontmatter 只有 `description`），skill 檔的 frontmatter 由 `skill-generation.ts` 的共用模板產生，對所有工具一視同仁。先改單一工具的預設會讓 Pi 與其他工具的 skill 分歧。重訪條件：上游決定 Pi 預設（commit 或維護者回覆），或本 fork 的 Pi 使用者回報自動探索造成干擾。 |
+| issue #2157（Community Schemas 表新增 `spec-driven-ids`） | 不採用 | 要在 `docs/customization.md` 的「Community Schemas」表加一列指向第三方 repo（`sonqh/spec-ctx`）。該表（本 fork `docs/customization.md` 第 413 行起）現有 5 列，與上游 `main` 的同一張表逐列相同（`git show refs/upstream-check/main:docs/customization.md` 中五個 schema 名稱全數命中，`spec-driven-ids` 0 命中）；這一列上游尚未合併，本 fork 也沒審過該 repo 的內容，不替未審的第三方 schema 背書。重訪條件：上游合併該列（經 commit 軸抵達時再看一眼該 repo）。 |
+
+水位：Issue `#2147`→`#2157`；PR 不變（`#2154`）；Commit 不變（`6d04a1b`）。

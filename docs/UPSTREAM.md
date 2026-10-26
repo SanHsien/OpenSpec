@@ -39,8 +39,8 @@ upstream  https://github.com/Fission-AI/OpenSpec.git (fetch & push)
 
 - **日期**：2026-10-26
 - **Commit 水位**：`6d04a1b58dedc95729d34e4f223d9d483aae210a`
-- **PR 水位**：`#2142`
-- **Issue 水位**：`#2147`
+- **PR 水位**：`#2154`
+- **Issue 水位**：`#2157`
 - **處置**：逐筆結論記於 `docs/DECISIONS.md`（2026-10-26 節）。採用 vitest／vite／launch-editor 安全升級、Actions SHA 更新，以及 #2108、#2120、#2086、#2104、#2131、#2133、#2127、issue #2145 的修正做法；#2083／#2114／#2119 因缺陷在本 fork 不存在而跳過；symlink、update 重構、standalone binaries、beta skills 等產品面延後並寫明重訪條件。
 
 ## 基線檔案結構 (`tools/upstream_baseline.json`)
