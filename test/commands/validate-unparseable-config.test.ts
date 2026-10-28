@@ -73,11 +73,13 @@ describe('validate with an unparseable config.yaml', () => {
     expect(result.stderr).toContain(path.join('openspec', 'config.yml'));
   });
 
-  it('leaves other commands warning and carrying on', async () => {
+  // `list` does not load config.yaml, so it neither warns nor fails on the broken file.
+  it('leaves commands that do not read the config working', async () => {
     const result = await runCLI(['list', '--specs'], { cwd: testDir });
 
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('alpha');
+    expect(result.stderr).not.toMatch(/could not parse/i);
   });
 
   it('reports the parse error in the JSON status envelope', async () => {
