@@ -56,6 +56,30 @@ describe('validate with an unparseable config.yaml', () => {
     }
   );
 
+  it('names the config file in the error', async () => {
+    const result = await runCLI(['validate', '--all'], { cwd: testDir });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain(path.join('openspec', 'config.yaml'));
+  });
+
+  it('fails the same way when the config is spelled config.yml', async () => {
+    const ymlPath = path.join(testDir, 'openspec', 'config.yml');
+    await fs.rename(configPath, ymlPath);
+
+    const result = await runCLI(['validate', '--all'], { cwd: testDir });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain(path.join('openspec', 'config.yml'));
+  });
+
+  it('leaves other commands warning and carrying on', async () => {
+    const result = await runCLI(['list', '--specs'], { cwd: testDir });
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain('alpha');
+  });
+
   it('reports the parse error in the JSON status envelope', async () => {
     const result = await runCLI(['validate', '--all', '--json'], { cwd: testDir });
 

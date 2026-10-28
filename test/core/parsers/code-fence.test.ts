@@ -18,6 +18,14 @@ describe('buildCodeFenceMask', () => {
     expect(buildCodeFenceMask(lines)).toEqual([false, false, false]);
   });
 
+  // Upstream #2131's first head used `(.*)$`, which rejects every opener on a
+  // line that keeps its CR (`.` does not match `\r`); upstream fixed it at e4e5c2f4.
+  // This fork slices the info string instead, and this pins that on Windows input.
+  it('still opens and closes fences on lines that keep a CRLF ending', () => {
+    const lines = ['```ts\r', '### Requirement: hidden\r', '```\r', 'after\r'];
+    expect(buildCodeFenceMask(lines)).toEqual([true, true, true, false]);
+  });
+
   it('still opens a tilde fence whose info string contains a backtick', () => {
     const lines = ['~~~ `x`', '### Requirement: hidden', '~~~', 'after'];
     expect(buildCodeFenceMask(lines)).toEqual([true, true, true, false]);

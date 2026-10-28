@@ -37,11 +37,12 @@ upstream  https://github.com/Fission-AI/OpenSpec.git (fetch & push)
 
 ## 最近一次審查
 
-- **日期**：2026-10-26
+- **日期**：2026-10-28
 - **Commit 水位**：`6d04a1b58dedc95729d34e4f223d9d483aae210a`
-- **PR 水位**：`#2154`
+- **PR 水位**：`#2161`
 - **Issue 水位**：`#2157`
 - **處置**：逐筆結論記於 `docs/DECISIONS.md`（2026-10-26 節）。採用 vitest／vite／launch-editor 安全升級、Actions SHA 更新，以及 #2108、#2120、#2086、#2104、#2131、#2133、#2127、issue #2145 的修正做法；#2083／#2114／#2119 因缺陷在本 fork 不存在而跳過；symlink、update 重構、standalone binaries、beta skills 等產品面延後並寫明重訪條件。
+- **補審（2026-10-28）**：上游 PR #2158–#2161 逐筆結論記於 `docs/DECISIONS.md`（2026-10-28 節）。#2158 跳過（本 fork 的 vite 7.3.7 不受該 GHSA 影響）、#2159 延後（Node 20 下限屬維護者決定）、#2160／#2161 不適用（standalone 安裝器與上游網域的 Worker 路由，本 fork 沒有）；同時對已採用的 #2131／#2133／#2127 因 head 漂移補上 5 個回歸測試。
 
 ## 基線檔案結構 (`tools/upstream_baseline.json`)
 

@@ -592,3 +592,49 @@ Commit `9111a76`→`6d04a1b`；PR `#2064`→`#2142`；Issue `#2059`→`#2147`。
 | issue #2157（Community Schemas 表新增 `spec-driven-ids`） | 不採用 | 要在 `docs/customization.md` 的「Community Schemas」表加一列指向第三方 repo（`sonqh/spec-ctx`）。該表（本 fork `docs/customization.md` 第 413 行起）現有 5 列，與上游 `main` 的同一張表逐列相同（`git show refs/upstream-check/main:docs/customization.md` 中五個 schema 名稱全數命中，`spec-driven-ids` 0 命中）；這一列上游尚未合併，本 fork 也沒審過該 repo 的內容，不替未審的第三方 schema 背書。重訪條件：上游合併該列（經 commit 軸抵達時再看一眼該 repo）。 |
 
 水位：Issue `#2147`→`#2157`；PR 不變（`#2154`）；Commit 不變（`6d04a1b`）。
+
+## 2026-10-28：上游 PR #2158–#2161 審查，以及已採用 PR 的 head 漂移
+
+### 起因：兩個紅燈是檢查器照設計在報「有待審項目」
+
+- `CI` 的 `Windows Dev Check` 與 `Upstream Check` workflow 同一個原因：`tools/check_upstream_updates.py --strict` 在 PR 軸看到 4 筆高於 `reviewed_pr_through`（`#2154`）的項目（#2158–#2161），依契約 exit 1。Commit 軸 behind 0（上游 `main` 仍是 `6d04a1b`），Issue 軸最高仍是 `#2157`。
+- 同一個 CI log 裡的 `[CHECK_FAILED]`／`ERROR: npm registry lookup failed` 不是缺陷也不是警告：它出現在 `Maintainer tool tests` 步驟（`Ran 15 tests ... OK` 之後才 flush 到 log），是 `tools/test_tools.py` 的 `test_registry_failure_is_not_success` 刻意模擬 registry 失敗時印出的 stdout，測試斷言的正是「registry 失敗不算成功」。該步驟 exit 0，失敗的是後面的 `Upstream baseline watermark check`。不改。
+- 舊的 `Upstream Check` 紅燈（`40285605864`，2026-10-26）是 issue #2155 未審，已於前一輪補審；本輪是 PR 軸。
+
+### 四個面向的狀態
+
+| 面向 | 查法 | 結果 |
+| --- | --- | --- |
+| Commit | `git fetch upstream`＋檢查器 | 上游 `main` 仍是 `6d04a1b`，無新 commit；`--grep` 的 squash 假象判斷不適用（沒有新 commit 可比） |
+| PR（`--state all`） | 檢查器與 `gh pr list --state all` | 新 4 筆（#2158–#2161），皆 OPEN；全部讀了目前 head 的 diff，判準八掃描（`\S\s{40,}\S`、`eval(`、`new Function(`、`globalThis`、長 base64／hex）0 命中，PR 本文的 HTML 註解只有 CodeRabbit 自動產生標記 |
+| Issue（`--state all`） | 檢查器 | 無新項目，最高仍 `#2157` |
+| 分支 | `git ls-remote --heads`（231 條）、`git for-each-ref` | baseline 沒有開分支軸（無 `check_branches`／`branches`），所以紅燈與此無關；本輪只檢視 2026-10-20 之後有動靜的分支（`for-each-ref` 依 committer date 篩出 13 條非 `main` 分支，全部對得上 PR #2127、#2134、#2148–#2154、#2158–#2161，沒有「有分支沒有 PR」的項目），結論見「head 漂移」與上方各筆。是否開分支軸、要不要逐條登記其餘舊分支，交維護者決定 |
+
+### 本輪新 PR 逐筆（採用 0、跳過 1、延後 1、不適用 2）
+
+| 上游 | 結論 | 證據與觸發條件 |
+| --- | --- | --- |
+| #2158（head `6f2ac6ae2e6e43f0809387809245196a850ed3e7`；`flake.nix` +1/-1、`package.json` +1/-1、`pnpm-lock.yaml` +268/-218） | 跳過 | 上游動機是取代 Dependabot #2148／#2150／#2154，並避開 vite 8.3.1 的 GHSA-587h-7wmj-h5pm（受影響 8.3.0–8.3.2）。本 fork 在 `package.json:71` 是 `"vite": "^7.3.7"`，`pnpm-lock.yaml:1272` 是 `vite@7.3.7`，不在受影響範圍：`pnpm audit --audit-level low` 回「No known vulnerabilities found」，`gh api repos/SanHsien/OpenSpec/dependabot/alerts` open 為 0。lockfile 與 `flake.nix` 的 hash 也不能抄：本 fork 鎖在 `eslint@10.9.1`（`pnpm-lock.yaml:883`）、`@inquirer/core@11.2.1`（`package.json:75`，鎖檔 391 行），上游改的是 10.12→10.13、12.0.4→12.0.5，基底不同；`flake.nix` 的 `pnpmDeps.hash` 是上游那份鎖檔的 hash，本 fork 由 `scripts/update-flake.sh` 依自己的鎖檔算。沿用 2026-10-26 第二輪對 #2154 的結論（固定 vite 7.3、vitest 4.1，`7d38a769`）。重訪條件：`pnpm audit` 或 Dependabot 對 vite 7.x 出現 7.x 修不了的警示，或 vitest 5 與 vite 8 的 peer 範圍相容且全套測試通過。 |
+| #2159（head `18667091ee20c58cd145194c994ae307a6937fa4`；16 檔 +33/-30） | 延後（不是缺陷，是破壞性的支援政策） | 把 `engines` 從 `>=20.19.0` 改 `>=22.12.0`，並把 CI 的 Node 釘版、文件、Dependabot 的 chalk 大版本 ignore 一併改。本 fork 對應處：`package.json:59-61` `engines` 是 `>=20.19.0`；`.github/workflows/ci.yml:85,141,175` 與 `security.yml:61,117` 釘 `20.19.0`；`.github/dependabot.yml:36` 的 chalk ignore 註解；`docs/troubleshooting.md:20-28`、`install.md:25`、`README.en.md:125`、`docs-lab/start/installation.md:8,36` 寫 20.19.0。實測本 fork 鎖檔 179 筆 `engines`，排除 Node 20.19.0 的只有 17 筆，全是開發期工具（`@changesets/*` 與 `@pnpm/deps.graph-sequencer`，`package.json:63-64` 的 devDependencies，`ci.yml:304` 用 Node 24 跑），執行期 `dependencies` 沒有任何一筆要求 Node 22，所以沒有「不升就壞」的缺陷。Node 20 已於 2026-04-30 終止維護是事實，但提高下限會讓 Node 20 的 npm 使用者無法安裝，應由維護者決定。重訪條件：維護者決定放棄 Node 20，或執行期依賴出現只在 Node 22 以上發佈的安全修正（`pnpm audit`／Dependabot）。屆時移植做法：改 `engines`、上列 5 處 `node-version`、文件字串與 chalk ignore，不抄上游 matrix 與 `binaries.yml`。 |
+| #2160（head `ed7a70b527c63cf6c7b85808e0b2360233445837`；11 檔 +162/-79） | 不適用 | 改的是 #2137 獨立執行檔的安裝器與發布：`scripts/binary/install.sh`、`install.ps1`、`.github/workflows/binaries.yml`、`test/binary-installer.test.ts`。本 fork 這四個檔案都不存在（#2137 於 2026-10-26 延後）；`grep -rn "install.sh\|install.ps1\|openspec.dev/cli\|SHA256SUMS"`（md／ts／yml／json，排除 node_modules）0 命中。README／`install.md`／`docs-lab/start/installation.md` 被改的行是 #2137 才加的獨立執行檔說明，本 fork 沒有（`docs-lab/start/installation.md:8` 仍是「OpenSpec is a Node.js CLI」）。新的安裝 URL `openspec.dev/cli/...` 由上游網域提供，本 fork 也不該指過去。重訪條件：決定採用 #2137。 |
+| #2161（head `0ada21ed3a07034042cf1a707eaac8ba33f742c0`；9 檔 +13/-8，含 4 個圖檔搬移） | 不適用 | 修的是上游 `openspec.dev` 的 routing Worker 把 `/docs/*` 導到文件站、根路徑圖示被導去 landing 站的問題。本 fork 的 `website/cloudflare/router/wrangler.jsonc` 路由全寫 `zone_name: "openspec.dev"`（第 7–11 行，是上游網域），`.github/` 下沒有任何 wrangler／cloudflare／pages deploy（`grep -rliE "wrangler\|cloudflare\|pages deploy" .github` 0 檔），`security.yml:93-99` 也寫明 website 不在 CI 安裝或建置，所以缺陷不存在於本 fork 可觸及的任何部署。PR 還建立在 #2142（pixel-O favicon，2026-10-26 略過）之上：本 fork 是 `website/app/icon.svg`，沒有上游現有的 `app/icon1.png`、`icon2.png`、`apple-icon.png`。重訪條件：本 fork 把文件站部署到自己的網域與路徑前綴。 |
+
+### 已採用 PR 的 head 漂移（判準八）
+
+2026-10-26 審查時釘的三個 head 之後都動了；全是 fast-forward（`compare` 的 base 即舊 head，`behind_by` 0），沒有 force-push，新增內容掃描 0 命中，且只動測試或一行正則。
+
+| PR | 舊 head → 新 head | 新增內容 | 本 fork |
+| --- | --- | --- | --- |
+| #2131 | `302de0f9` → `e4e5c2f4dd7c82e2d9980c0208f1c473bca888ad` | `src/core/parsers/code-fence.ts` 正則去掉 `$`（+3/-1）與兩個測試 | 這正是 2026-10-26 刻意不照抄 `(.*)$` 的原因（`.` 不匹配 `\r`，CRLF 行整個認不出 fence），上游自己兩天後承認並修掉。本 fork `code-fence.ts:17-28` 用切 info string 的做法，本來就對 CRLF 安全，行為不需改；補測試釘住（`test/core/parsers/code-fence.test.ts`）；Node 實測帶 `$` 的正則對結尾是 CR 的 fence 行回 false，去掉 `$` 才回 true。 |
+| #2133 | `aeec4f3f` → `8f8141df9bfd08fcda82e28a9b269acce9eca1e0` | 只加 `test/core/archive.test.ts` 53 行：目標 spec 有 `###Requirement: A` 與 `### Requirement: A` 重複時 archive 要中止且不動檔案 | 本 fork 的 `specs-apply.ts:372` 已有 `target spec is structurally invalid and cannot be updated until fixed`；補同一個測試釘住，修改前就綠（行為已存在）。 |
+| #2127 | `e03319c6` → `a0f6213575794fc7c7e06492bf144ca3e754becd` | 只加 `test/commands/validate-unparseable-config.test.ts` 19 行：錯誤訊息含 config 路徑、`config.yml` 拼法也失敗、其他命令仍只警告 | 本 fork 的 `readConfigParseError` 走 `resolveConfigFilePath`（`project-config.ts:412-426`），訊息含完整路徑；補三個測試釘住，修改前就綠。 |
+
+另：#2134（beta skills，2026-10-26 延後）的分支 `claude/openspec-skills-overhaul-1e6c68` 在 2026-10-27 又推了 10 個 commit，現 head `6e39b86f456a7ed5813db317186d312b7f99ccd3`，148 檔 +8495/-8027，`src/` 動 32 檔（含 `update.ts`、`verify-change.ts`）。結論不變，仍是產品功能且依賴本 fork 已分歧的 update 流程；重訪條件沿用「決定採用上游 update 重構」。
+
+### 程式變更
+
+沒有改產品碼。新增 5 個回歸測試（`code-fence.test.ts` 1 個、`validate-unparseable-config.test.ts` 3 個、`archive.test.ts` 1 個），都在未改 `src/` 的情況下通過，作用是把上游後續發現的邊界釘在本 fork 的實作上。
+
+### 水位
+
+Commit 不變（`6d04a1b`）；PR `#2154`→`#2161`；Issue 不變（`#2157`）；分支軸未開。
