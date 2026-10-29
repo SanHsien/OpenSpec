@@ -37,12 +37,13 @@ upstream  https://github.com/Fission-AI/OpenSpec.git (fetch & push)
 
 ## 最近一次審查
 
-- **日期**：2026-10-28
+- **日期**：2026-10-30
 - **Commit 水位**：`6d04a1b58dedc95729d34e4f223d9d483aae210a`
-- **PR 水位**：`#2161`
-- **Issue 水位**：`#2157`
+- **PR 水位**：`#2172`
+- **Issue 水位**：`#2173`
 - **處置**：逐筆結論記於 `docs/DECISIONS.md`（2026-10-26 節）。採用 vitest／vite／launch-editor 安全升級、Actions SHA 更新，以及 #2108、#2120、#2086、#2104、#2131、#2133、#2127、issue #2145 的修正做法；#2083／#2114／#2119 因缺陷在本 fork 不存在而跳過；symlink、update 重構、standalone binaries、beta skills 等產品面延後並寫明重訪條件。
 - **補審（2026-10-28）**：上游 PR #2158–#2161 逐筆結論記於 `docs/DECISIONS.md`（2026-10-28 節）。#2158 跳過（本 fork 的 vite 7.3.7 不受該 GHSA 影響）、#2159 延後（Node 20 下限屬維護者決定）、#2160／#2161 不適用（standalone 安裝器與上游網域的 Worker 路由，本 fork 沒有）；同時對已採用的 #2131／#2133／#2127 因 head 漂移補上 5 個回歸測試。
+- **補審（2026-10-30）**：PR #2168–#2172 與 issue #2163–#2167、#2173 全部逐筆 defer，理由、head／狀態與重看條件見 [裁決記錄](DECISIONS.md#2026-10-30補審上游-5-筆-pr-與-6-筆-issue)。commit 水位不變，沒有採用產品變更。PR 以 baseline 的 `monitored` 追蹤 head／狀態漂移；issue 依 [ROADMAP](../ROADMAP.md) 的後續項目於每週審查時人工重看。closed 的 #2169／#2164 不等於本 fork 沒有寫入防護缺口。
 
 ## 基線檔案結構 (`tools/upstream_baseline.json`)
 

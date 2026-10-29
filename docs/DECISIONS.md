@@ -638,3 +638,80 @@ Commit `9111a76`→`6d04a1b`；PR `#2064`→`#2142`；Issue `#2059`→`#2147`。
 ### 水位
 
 Commit 不變（`6d04a1b`）；PR `#2154`→`#2161`；Issue 不變（`#2157`）；分支軸未開。
+
+## 2026-10-30：依賴新鮮度逐項裁決
+
+本輪只裁決根目錄 `package.json` 的依賴宣告；不變更 Node 最低支援政策、不升級依賴、不調高宣告下限，也不新增延後設定檔。
+
+### 檢查語意與排程政策
+
+- 實跑 `python tools/check_dependency_freshness.py --strict`：20 個套件中 9 個 `OUTDATED`、11 個 `OK`，沒有 `CHECK_FAILED`，exit 1。明細保存在工具產生且已忽略的 `dependency-freshness-report.md`。
+- `OUTDATED` 只表示「宣告下限的 major 小於 npm latest 的 major」，不代表鎖檔過期、存在漏洞或新版不相容；同 major 的 minor／patch 落後仍是 `OK`。本表版本為本輪 npm registry 查詢快照。
+- 工具不讀本文件，也沒有延後豁免機制。以下裁決完成後，strict 仍應 exit 1；不得把裁決完成宣稱為新鮮度全綠。
+- `.github/workflows/dependency-freshness.yml` 月排程執行非 strict 模式：只要查詢完成，即使有 `OUTDATED` 仍 exit 0；查詢失敗則 exit 2。月排程是查詢健康檢查，人工 strict 加本文件負責逐項裁決，兩者用途不同，維持現有工具與排程。
+
+### 每個 OUTDATED 套件的裁決與重看條件
+
+各列均為**已延後**，不是已證實新版不可用。未實際安裝或測試下列候選新版；相容性理由以 npm metadata 與本 fork 現有呼叫點為準。
+
+| 套件 | 宣告 → npm latest | 延後理由與證據 | 重看條件 |
+| --- | --- | --- | --- |
+| `@inquirer/core` | `^11.2.1` → `12.0.6` | 新版 engines 仍涵蓋 Node 20.19，不能用 Node 下限作為阻擋理由。但 `src/prompts/searchable-multi-select.ts`、`src/ui/welcome-screen.ts` 直接用 prompt hooks，測試也 mock core；大版本需驗證鍵盤、渲染與退出行為。最新 prompts 8.7.5 的 select 5.2.8 已依賴 core 12.0.6，後續應一起檢查直接與間接版本。 | 舊版需安全修補，或安排 core 12 相容驗證；須通過 searchable-multi-select、welcome-screen 與完整測試，並驗證 Windows 終端互動後才升級。 |
+| `chalk` | `^5.6.2` → `6.0.1` | 最新 engines 為 `>=22`，排除目前承諾的 Node 20.19；符合 `.github/dependabot.yml` 的 major ignore 理由。 | 維護者核准放棄 Node 20，或 5.x 有無法修補的安全警示；依 Node 支援政策遷移列統一處理 engines、CI、文件與 ignore。 |
+| `commander` | `^14.0.0` → `15.0.0` | 最新 engines 為 `>=22.12.0`，排除 Node 20.19；屬執行期依賴，不能只因新鮮度提高產品最低版本。 | 維護者核准 Node 政策遷移，或 14.x 無法取得必要安全修補；升級時驗證 CLI 參數、help、錯誤與退出碼及全套測試。 |
+| `glob` | `^13.0.6` → `14.0.3` | 最新 engines 為 `18 || 20 || >=22`，並未排除 Node 20。本 fork 的 `src/core/artifact-graph/outputs.ts` 直接使用 `Glob`、`globSync`，有 brace、globstar、junction 與專案外路徑防護；大版本不能只以可安裝判定安全。 | 13.x 出現無法修補的安全警示，或安排 glob 14 的 confinement 相容驗證；須先通過 outputs／artifact-graph 的 Windows 路徑安全回歸，再跑全套測試。 |
+| `@types/node` | `^20.19.43` → `26.6.6` | 型別 major 刻意對齊最低 Node 20 API；升到 26 可能讓型別檢查放過 Node 20 沒有的 API。符合 Dependabot major ignore；這是開發期型別政策，不是 npm engines 衝突。 | 維護者調整最低 Node major，或新版工具的必要 peer 要求使 Node 20 型別無法保留；型別與 runtime 支援政策一起裁決，通過型別檢查與最低版本測試。 |
+| `@vitest/ui` | `^4.1.12` → `5.0.5` | 最新 peer 要求 `vitest: 5.0.5`，不能單獨與現有 vitest 4.1.12 配對；跟隨下列 vitest 裁決。 | vitest 5 的 Node／型別政策條件成立，並與 vitest 升至相同版本；驗證 UI 啟動與完整測試。 |
+| `typescript` | `^6.0.3` → `7.0.2` | 鎖定的 `typescript-eslint@8.67.0` peer 為 `>=4.8.4 <6.1.0`，未接受 TypeScript 7；新版還改為平台套件與 exports，`build.js` 使用 `require.resolve('typescript/bin/tsc')`，不能假設舊路徑可用。符合 Dependabot major ignore。 | typescript-eslint 明確支援 7.x，且驗證 build.js 與安裝腳本可解析新編譯器；須通過 Windows 安裝、build、型別、lint、package-install-scripts 與全套測試。 |
+| `vite` | `^7.3.7` → `8.3.5` | 最新 engines 仍涵蓋 Node 20.19，且 vitest 4.1.12 的 peer 已接受 vite 8；先前「等待 peer 相容」條件已成立，不能再當未成立理由。仍延後到獨立遷移驗證：Vite 8 metadata 使用 rolldown，與 7.x 建置鏈不同，本輪未驗證。 | 安排 Vite 8 遷移，或 7.x 出現無法修補的安全警示；可先與 vitest 4 配對測試，不必等待提高 Node 下限。升級須通過 Windows frozen install、build、完整測試並核對鎖檔及 Nix hash。 |
+| `vitest` | `^4.1.12` → `5.0.5` | 最新 engines 為 `^22.12.0 || ^24.0.0 || >=26.0.0`、Node 型別 peer 為 `^22.0.0 || >=24.0.0`；與目前 Node 20 測試及 `@types/node@20` 政策不符。與 UI 必須同版；Vite peer 已接受 6.4／7／8，並非等待 Vite peer 相容。 | 維護者核准開發／測試環境改用受支援 Node 與型別（可另定 CLI 最低版），或 4.x 無法取得安全修補；同步 UI，通過完整測試、型別、lint、build 與 Windows gate。 |
+
+版本與 engines／peer 來源為 npm 官方 registry 的本輪回應：
+[core](https://registry.npmjs.org/@inquirer/core/12.0.6)、[prompts](https://registry.npmjs.org/@inquirer/prompts/8.7.5)、[select](https://registry.npmjs.org/@inquirer/select/5.2.8)、[chalk](https://registry.npmjs.org/chalk/6.0.1)、[commander](https://registry.npmjs.org/commander/15.0.0)、[glob](https://registry.npmjs.org/glob/14.0.3)、[Node types](https://registry.npmjs.org/@types/node/26.6.6)、[UI](https://registry.npmjs.org/@vitest/ui/5.0.5)、[TypeScript](https://registry.npmjs.org/typescript/7.0.2)、[typescript-eslint](https://registry.npmjs.org/typescript-eslint/8.67.0)、[Vite](https://registry.npmjs.org/vite/8.3.5)、[Vitest 4](https://registry.npmjs.org/vitest/4.1.12)、[Vitest 5](https://registry.npmjs.org/vitest/5.0.5)。
+
+### 本輪驗證
+
+- `pnpm install --frozen-lockfile`：exit 0，prepare 編譯成功，結尾 `Done in 6.2s using pnpm v10.34.5`；宣告與鎖檔未變更。
+- `pwsh -NoProfile -File tools\dev_check.ps1`：exit 1。Python 工具編譯、15 個維護工具測試、Markdown 連結與 4 個 fork hygiene 測試均通過；最後輸出 `Upstream baseline watermark check failed with exit code 1`。上游 commit behind 0，但有 5 筆新 PR、6 筆新 issue 待審，屬本輪範圍外，不變更水位。完整輸出保存在已忽略的 `dependency-review-dev-check.log`。
+- 本輪只改文件，未修產品或工具 bug，先紅後綠不適用；既有 freshness 測試在上述 gate 通過，含 strict 對 OUTDATED 回 1、查詢失敗不算成功的契約。產品 CHANGELOG 與全庫風險快照 REVIEW.md 無需調整。
+
+## 2026-10-30：補審上游 5 筆 PR 與 6 筆 issue
+
+本輪接續上述依賴裁決，保留原內容。審查基點為 fork `3f260c7fcaa432ecd65e51bfd42ab0895cb045d2`（2026-10-30 唯讀查詢 `SanHsien/OpenSpec` 的 `main` 與本機 HEAD 相同）。上游 `main` 仍為 `6d04a1b58dedc95729d34e4f223d9d483aae210a`，沒有新 commit。用 `gh pr view`、`gh api .../pulls/<number>/files` 讀 PR 說明、檔案與產品差異，並用 `gh issue view` 讀 issue 本文及關閉理由；未向上游寫入、未合併程式。
+
+### PR 逐筆裁決
+
+以下均為 **defer（延後）**，不是判定缺陷不存在。這輪規格是完成審查與水位修正；產品修正各有不同的測試、生成鏡像與相容性要求，列入 ROADMAP，不能只提高水位就宣稱產品已修復。狀態與 head 為本輪查詢快照。
+
+| PR／狀態／head | 裁決 | 本 fork 的證據與延後理由 | 重看條件 |
+| --- | --- | --- | --- |
+| [#2168](https://github.com/Fission-AI/OpenSpec/pull/2168)／open／`9e0cd2d002a4c656e838b7c40147088f65da591e` | defer | archive、bulk-archive、sync 三個 workflow 仍硬編 `artifactPaths.specs` 與 `instructions specs`，自訂 artifact id 的問題適用。PR 依 `outputPath` 找 artifact、每個 id 各取規則，但仍收集所有 Markdown，沒有解決 #2173。不可單獨照搬而保留錯誤 delta 集合。 | 下一輪 sync／archive 修補時與 #2173 一起處理；若 PR head／狀態改變先重審。需測自訂 id、多 artifact 規則、空集合與非 spec.md 拒絕，再更新生成鏡像及 parity。 |
+| [#2169](https://github.com/Fission-AI/OpenSpec/pull/2169)／closed／`18e6bc87bda8fb75dc66520977de402e3e337f6c` | defer | PR 在每次 main-spec 讀寫前補 realpath 防護；本 fork `sync-specs.ts` 仍只在刪除最後 requirement 的特殊情況寫出 containment 規則。上游以不支援 symlink 關閉 #2164，不能當成本 fork 已安全的證據；CLI 的 `specs-apply.security.test.ts` 也不能代替 agent workflow 防護。 | 下一輪 sync／archive 安全修補優先處理，不必等上游重新開啟；需涵蓋 Windows junction、外部 spec.md、缺檔時最近既有父目錄，以及拒絕後不寫入、不歸檔。head／狀態變動亦重審。 |
+| [#2170](https://github.com/Fission-AI/OpenSpec/pull/2170)／open／`2a6adab529d364c0acb3ffb73d02147c1d3ff083` | defer | CLI `instructions.ts` 已回傳並顯示 `warnings`，但本 fork `apply-change.ts` 只按 blocked／all_done 分流，未讀 warnings。PR 新增告警暫停與修補後重讀；本 fork 的共用 `getApplyInstructions()` 已與上游 optionalWorkflow 結構不同，需適配，不能直接替換整檔。 | 下一輪 apply 模板修補，或 PR head／狀態變動；先測 ready／all_done 告警、明確選擇繼續、修補後刷新與新告警，再檢查 skill／command／生成鏡像一致。 |
+| [#2171](https://github.com/Fission-AI/OpenSpec/pull/2171)／open／`61fde7c6ecbb279665af1c240cf290dc6d045553` | defer | CLI 已有按依賴順序回傳的 `missingPrerequisites`；本 fork apply 模板仍泛指 continue 或查 status，沒有把選擇限制在該集合。PR 改的是上游 `BLOCKED_STATE_HANDOFF`，該常數不在本 fork；需與 #2170 一起改共用模板，保留 store flags 與缺欄位退路。 | 下一輪 apply 模板修補，或 PR head／狀態變動；測無關 ready artifact、間接依賴、舊 CLI 缺欄位、集合內無 ready 時不建立檔案。 |
+| [#2172](https://github.com/Fission-AI/OpenSpec/pull/2172)／open／`4d518c14a10592f36f4d98236b2dab09b17b23aa` | defer | 本 fork `ZshInstaller.getZshrcPath()` 與 completion 提示均固定 home 的 .zshrc，ZDOTDIR 問題適用。PR 改安裝、解除安裝候選與提示，且對非絕對 ZDOTDIR 回退 home；需確認相對路徑政策並做真實 zsh 驗證，Windows gate 不能證明 shell 載入成功。 | 有 ZDOTDIR 使用需求或安排 POSIX completion 驗收，或 PR head／狀態變動；測絕對／空白／相對／未設定值、舊 home 區塊清理、重裝往返及真實 zsh 載入。 |
+
+### Issue 逐筆裁決
+
+| Issue／狀態 | 裁決 | 理由與本 fork 對照 | 重看條件 |
+| --- | --- | --- | --- |
+| [#2163](https://github.com/Fission-AI/OpenSpec/issues/2163)／open | defer | 自訂 schema 把 delta artifact 命名為其他 id 時 archive 漏同步；本 fork 的硬編 id 確實存在。由 #2168 追修，不能因 CLI 已能解析 schema 而略過 skill 缺口。 | 與 #2168／#2173 的 sync 修補一起驗證；issue 有實質新證據時重審。 |
+| [#2164](https://github.com/Fission-AI/OpenSpec/issues/2164)／closed（not planned） | defer | 已讀維護者關閉留言，理由是 symlink 不是官方支援情境；但防止外部路徑寫入仍是本 fork 的邊界，採用 #2169 的安全問題判定，不採用上游「不處理」作為豁免。 | 下一輪 sync 安全修補，依 #2169 的 Windows 路徑驗收；不以重新開 issue 為前提。 |
+| [#2165](https://github.com/Fission-AI/OpenSpec/issues/2165)／open | defer | apply blocked 時可挑到無關 ready artifact；本 fork 尚未將選擇綁定 `missingPrerequisites`。與 #2171 同一缺口，不重複實作。 | 下一輪 apply 模板修補，沿用 #2171 的依賴集合驗收；issue 新證據亦重審。 |
+| [#2166](https://github.com/Fission-AI/OpenSpec/issues/2166)／open | defer | CLI 已有缺 delta 或 stray file 的 warnings，模板仍忽略；現有 `apply-instructions-warnings.test.ts` 只證明 CLI 輸出，不能證明 agent 暫停。與 #2170 同案。 | 下一輪 apply 模板修補，沿用 #2170 的告警驗收；issue 新證據亦重審。 |
+| [#2167](https://github.com/Fission-AI/OpenSpec/issues/2167)／open | defer | 提案以可見 ID 取代名稱優先匹配，牽涉 parser、validate、archive 與連結語意，並依賴 #1979／已延後的 beta skills #2134；屬產品規格變更，非單純維護補丁。本輪未驗證提案聲稱的歷史重建數據。 | 維護者決定引入穩定 ID，或正式採用 #1979／#2134 前重新審規格；需涵蓋無 ID 向後相容、重複 ID、改名與移除 ID 的回歸。 |
+| [#2173](https://github.com/Fission-AI/OpenSpec/issues/2173)／open | defer | 本 fork sync 明寫「Sync every path in existingOutputPaths」，schema glob 可包含 notes.md；CLI 的 `discoverSpecFiles` 只認 capability 下的 spec.md。故 agent 與 CLI 有真實集合差異，#2168 改 id 並未修復。必須在第一次 main-spec 寫入前拒絕 stray files，最後才 validate 會太晚。 | 下一輪 sync／archive 修補，與 #2168 一起測 notes.md、巢狀 capability、合法 spec.md、caller subset，以及拒絕時 main spec 與 change 皆不動；issue 新修正亦重審。 |
+
+### 水位與追蹤
+
+- commit 水位不變：`6d04a1b58dedc95729d34e4f223d9d483aae210a`。
+- PR 水位 `2161` → `2172`；issue 水位 `2157` → `2173`；日期更新為 `2026-10-30`。水位代表已逐筆裁決，並非已合併或已修復。
+- 5 筆 PR 全部釘入 baseline 的 `monitored`（本輪 head 與 open／closed 狀態）。後續 head／狀態漂移會讓 strict 再紅，不以提高水位永久隱藏延後項目。工具目前只監看 PR；issue 的重看條件與後續工作統一放 ROADMAP，每週審查時人工核對相關 issue。
+- ROADMAP 頁首與現況段更新為 10-30、fork SHA `3f260c7fcaa432ecd65e51bfd42ab0895cb045d2`；保留 Node 政策待決列。原依賴裁決列已完成並自 ROADMAP 移除。
+
+### 本輪驗證範圍
+
+- 修改前 `pwsh -NoProfile -File tools\dev_check.ps1`：exit 1，結尾 `Upstream baseline watermark check failed with exit code 1`；完整輸出在已忽略的 `upstream-triage-before.log`。
+- 重跑 `python tools/check_dependency_freshness.py --strict`：20 個套件仍為 9 OUTDATED、11 OK、0 CHECK_FAILED，exit 1；原先 9 筆裁決全部保留，工具語意與月排程政策不變，輸出在已忽略的 `upstream-triage-freshness.log`。
+- 修改後 `pwsh -NoProfile -File tools\dev_check.ps1`：exit 0，結尾 `WINDOWS DEV CHECK GREEN`；Python 編譯、15 個維護工具測試、Markdown 連結、4 個 fork hygiene 測試及 upstream strict 全通過，5 個 monitored head／狀態均未漂移。輸出留在已忽略的 `upstream-triage-after.log`；依賴 strict 的預期 exit 1 不等於 upstream strict 失敗。
+- 本輪僅改審查文件、路線圖及 baseline 資料，沒有產品或工具 bug 修正，因此新增先紅後綠回歸測試不適用；上述閘門的紅轉綠驗證水位修正。未執行產品修補，也不宣稱延期缺陷已修復；不變更產品 CHANGELOG 或全庫審查快照 REVIEW.md。
