@@ -4,7 +4,7 @@
 > 現況段的數字是 2026-10-29 依 `main` `02885d2a709d` 查的快照，開工前先重查 GitHub。
 
 ## 現況
-OpenSpec 提供 AI 開發的規格、提案、實作與歸檔工作流，本線重點是 Windows 原生維護（[README](README.md)、[FORK](FORK.md)）。2026-10-29 `gh` 查詢顯示 CI、CodeQL、Security 與 Upstream Check 最近成功，Dependabot／Code scanning 均為 0；依賴新鮮度與 Node 支援政策仍有待裁決項目（2026-10-29 `gh` 查詢；深掃報告（2026-10-2x）「待維護者決定」；[裁決](docs/DECISIONS.md):618）。
+OpenSpec 提供 AI 開發的規格、提案、實作與歸檔工作流，本線重點是 Windows 原生維護（[README](README.md)、[FORK](FORK.md)）。2026-10-29 `gh` 查詢顯示 CI、CodeQL、Security 與 Upstream Check 最近成功，Dependabot／Code scanning 均為 0；依賴新鮮度與 Node 支援政策仍有待裁決項目（2026-10-29 `gh` 查詢；深掃報告（2026-10-2x）「待維護者決定」；`docs/DECISIONS.md:618`）。
 
 ## 近期：可以直接動手
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
