@@ -41,22 +41,22 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getExploreSkillTemplate: '9637bb6b335cb6197fd61527b162cafceab930d3fcb517a925d142cb96133ae8',
   getNewChangeSkillTemplate: 'eabd1e895c5881dcb17dcbaa3fb26098dd59e8eacb318e400820b4dc811ef781',
   getContinueChangeSkillTemplate: '94b510499ba0d03331c6d29a6f583e6884769b61cf932c46220d30cfb75a7198',
-  getApplyChangeSkillTemplate: 'd1e7d5ceb85193c0964057dbb88e9651526754bd33f84020e2440ff0621d5dbb',
+  getApplyChangeSkillTemplate: '7d9b0b558a88a8632e6c10a1d1f4fc93cbeb30523eca9dfba789f219dd918624',
   getFfChangeSkillTemplate: '6a05eff7801c9e41e2798b8d3d199a796464a40631cee1137740420589650c0e',
-  getSyncSpecsSkillTemplate: 'b099e2ff31859c9b10d928066e662524f9aad9ecf2be12fceacb732d718c4146',
+  getSyncSpecsSkillTemplate: '38f4a224a1d5d80e6907bdda8567d45f1a744e195d7e422b1b7f272a45a397a2',
   getOnboardSkillTemplate: '3a836faae463d88c289a1c129cb7ee556a563b7e53e1a52a4711ff152a3b51f7',
   getOpsxExploreCommandTemplate: '2dce0badab347b6149da9aa83f5e3eb2ab0802908033676121e52612ea183e9e',
   getOpsxNewCommandTemplate: 'f2d30e569798a4c92ba932859d6ba4e0ad10e18feccbade1cfee0957597b3463',
   getOpsxContinueCommandTemplate: 'f7348d15c639ae077c3f9aacc582ef0efc3f5fb010bf52569f9ee8c58a9c4d94',
-  getOpsxApplyCommandTemplate: 'e3579ac78f2e2c75fa3d3a7ac7dc3e49c395e96f7323398f0f041d94f8de9bb0',
+  getOpsxApplyCommandTemplate: 'e412b44512d2a2b20f38d4a03cec8a7c70c6604ef1aef4f4b4ffb50e16a00587',
   getOpsxFfCommandTemplate: '818b3468c8af106c4a1393cd535520ecf22678fd5b534c1d617fb36452ca6ae2',
-  getArchiveChangeSkillTemplate: '56bfada1a5f35a127791b70de9d428a75b5aedd1584d6c9803a1ecb1fd1b4a23',
-  getBulkArchiveChangeSkillTemplate: '93875998cade5322d95b43299fba794bc1da754e917dd63a770406386a6d295d',
-  getOpsxSyncCommandTemplate: '0d2427efb79986e8fff3f96bd075a739c80d45eb29159fae717e950030da8202',
+  getArchiveChangeSkillTemplate: '560d435b0c4b661e0d12a02b9bb332bec0d1f97326b22d520c1a345187398826',
+  getBulkArchiveChangeSkillTemplate: 'a1e7c2c6e77330126ade5c3909f8f118148f0249d74c16df326b661910488c44',
+  getOpsxSyncCommandTemplate: 'ee52156fa8449925d8077b743f42424033be107d394a2cd7fcc384a68dfe408b',
   getVerifyChangeSkillTemplate: '223b7ffd99299a7d430e13092b9a0a3421b39f0d3217232f46c39d79b5f619ff',
-  getOpsxArchiveCommandTemplate: '9f973c819b11620985b03322945f0e0a92a02a2ef455b94e74482f5e6292ac5d',
+  getOpsxArchiveCommandTemplate: 'ab8e8cca126acc815963e4bdab565ea71354472c7dd113adb0d168af9ebff6ac',
   getOpsxOnboardCommandTemplate: 'ee99aa99252c602720fbb8c63fb3ac438a5bd4e952fd961ddf1ae956cbfc2c8f',
-  getOpsxBulkArchiveCommandTemplate: '9fa8cdebe2f5667ebfc37bdc023396762c59d5b038c771dac2d8fd2c19e2627b',
+  getOpsxBulkArchiveCommandTemplate: 'f0a3faf0bcbf99ae902ca8cfd41bf1c75f9e0576a5db719ad566a5646e28dc79',
   getOpsxVerifyCommandTemplate: '1efcf7eff0671f48e9d9420f50865c563dd3079ee60f8c380bb7a90dd0102696',
   getOpsxProposeSkillTemplate: '3f1487d8c12eb8847877c8e94066293000e8849f2f49fdbdeb5b03193383def3',
   getOpsxProposeCommandTemplate: '8e18425dd933b4dfca8269a19d7205b606a485ced4506111835b365f54508887',
@@ -69,11 +69,11 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-explore': 'd69ece19fef8f58519d9a2dc879e394d20ea47b0264799d90eff75596ce1075e',
   'openspec-new-change': 'ec4529beef978e34634a6f7286fab55d68fad8fb374dceb45691d52caab33fbb',
   'openspec-continue-change': 'af9e2d461cda7a8fd246b7dcff4ec586bbb490d690d0f9f5b511f95ffb6ff7a3',
-  'openspec-apply-change': '81ea96d9fa6ec8536cd23c1fe561ed28e1cc1cad0a8ceb700588e08974cc0e49',
+  'openspec-apply-change': '133f92451c1adb9dd887da890f24138e916f8000a2ab826ba10068b41ec08e89',
   'openspec-ff-change': 'd55b123c84984c4a407c732b7fbc2bebd6057caab017370b748f497e7f66c52f',
-  'openspec-sync-specs': 'd933d8856584d6c1253de91e652e7aee9e85c77ad4d3531f6476f79d84e6e5e8',
-  'openspec-archive-change': '7c65053d674ba4e1e20e2bf73ba7e5a7f94baef2eaa9b33cee48d4cadea51b7a',
-  'openspec-bulk-archive-change': '2039b9ecf6e64339dffe0e16272507a386d9fe326f419ff758315aa736fdd96c',
+  'openspec-sync-specs': 'd27f1899a2d20d1d9e790c178a51c39d8b8ef8ad0a192ccec802c2a095995965',
+  'openspec-archive-change': 'a569779120787d4bf81be8cafce5bd11f6167e170394425a2f089b16bc77d301',
+  'openspec-bulk-archive-change': '2d6f519318ac79e53e51db06e7d6989676a2551b6916be583226c0d52a72d80d',
   'openspec-verify-change': 'af9be013dcbe8c6d8f6d9ab10c893fbd03f4c62933c384d82f63894dd0ceb84f',
   'openspec-onboard': 'f6f59476acaf5e4d65dbb180da4cef62432612f3cecf207d471a951295e2003a',
   'openspec-propose': 'edb966cc361e8bdd71e67d5643c302bb18c29a0a121286183090b3ab7ac14f31',
@@ -686,17 +686,25 @@ describe('skill templates split parity', () => {
       expect(content, variant).toContain('read and consider every entry');
       expect(content, variant).toContain('report the conflict and preserve the controlling value');
       expect(content, variant).toContain('do not follow it\n   and explain why');
+      // #2163: the delta-spec artifact is found by its output path, never by
+      // assuming the id `specs`, which a custom schema may not use.
+      expect(content, variant).not.toContain('artifactPaths.specs');
+      expect(content, variant).not.toContain('openspec instructions specs');
       expect(content, variant).toContain(
-        '`artifactPaths.specs.existingOutputPaths` from status JSON as the only'
+        'every `artifactPaths.<id>` entry in status JSON\n   whose `outputPath` is under `specs/`'
       );
-      expect(content, variant).toContain('`specs` entry is missing');
-      expect(content, variant).toContain('do not infer\n   delta specs from other artifacts');
+      expect(content, variant).toContain('do not assume the id `specs`');
+      expect(content, variant).toContain('do not infer delta specs from other artifacts');
       expect(content, variant).toContain(
-        'openspec instructions specs --change "<name>" --json'
+        'openspec instructions <spec-artifact-id> --change "<name>" --json'
       );
       expect(content, variant).toContain('stop\n   before writing any main spec or moving the change');
       expect(content, variant).toContain('valid response with omitted\n   `rules`');
-      expect(content, variant).toContain('inline sync must reuse that snapshot');
+      // A schema can declare more than one delta-spec artifact, so archive hands
+      // sync one snapshot per artifact id, never one literal `specs` snapshot.
+      expect(content, variant).toContain('inline sync must reuse those snapshots');
+      expect(content, variant).toContain('each labeled with its artifact id');
+      expect(content, variant).not.toContain('fetching `specs` instructions');
       expect(content, variant).toContain('do not use them as archive guidance');
       expect(content, variant).toContain(
         'Existing CLI checks, resolved paths, prompts, and command contracts are unchanged'
@@ -715,13 +723,23 @@ describe('skill templates split parity', () => {
     ];
 
     for (const [variant, content] of syncVariants) {
+      expect(content, variant).not.toContain('artifactPaths.specs');
+      expect(content, variant).not.toContain('openspec instructions specs');
       expect(content, variant).toContain(
-        '`artifactPaths.specs.existingOutputPaths` from the status JSON as the'
+        'every `artifactPaths.<id>` entry in the status\n   JSON whose `outputPath` is under `specs/`'
       );
-      expect(content, variant).toContain('`specs` entry is missing');
+      expect(content, variant).toContain('do not assume the id `specs`');
+      expect(content, variant).toContain(
+        'obtain one current specs-rule snapshot for\n   each delta-spec artifact id from step 3'
+      );
+      expect(content, variant).toContain(
+        'Apply each artifact\'s returned `rules` only to the content and form of the\n   main specs merged from its own deltas'
+      );
       expect(content, variant).toContain('do not infer them from other artifacts');
-      expect(content, variant).toContain('reuse it and do not\n     fetch the same instructions again');
-      expect(content, variant).toContain('Otherwise run that command once now');
+      expect(content, variant).toContain('reuse\n     them and do not fetch the same instructions again');
+      expect(content, variant).toContain(
+        'Otherwise, or for any id the caller supplied no snapshot for, run that\n     command once now'
+      );
       expect(content, variant).toContain('stop before writing any main spec');
       expect(content, variant).toContain('Do not treat the\n     failure as an absent rule set');
       expect(content, variant).toContain('valid response with omitted `rules`');
@@ -754,7 +772,13 @@ describe('skill templates split parity', () => {
       expect(content, variant).toContain(
         'Treat this list as the only delta-spec source'
       );
-      expect(content, variant).toContain('missing or the list is empty');
+      expect(content, variant).not.toContain('artifactPaths.specs');
+      expect(content, variant).not.toContain('openspec instructions specs');
+      expect(content, variant).toContain('do not assume the id `specs`');
+      expect(content, variant).toContain('or the list is empty');
+      expect(content, variant).toContain(
+        'once for each of that change\'s delta-spec artifact ids'
+      );
       expect(content, variant).toContain('mixed-schema\n        batches');
       expect(content, variant).toContain('fetch every\n   required specs-rule snapshot');
       expect(content, variant).toContain(
@@ -764,7 +788,11 @@ describe('skill templates split parity', () => {
         'stop the whole batch before\n   any main-spec write or change move'
       );
       expect(content, variant).toContain(
-        'sync must reuse it without fetching instructions again'
+        'one per delta-spec\n        artifact id and labeled with it, into inline sync; inline sync must reuse\n        them without fetching instructions again'
+      );
+      expect(content, variant).not.toContain('no `specs` artifact');
+      expect(content, variant).toContain(
+        'some schemas have no delta-spec artifact'
       );
       expect(content, variant).toContain(
         'Treat\n   `context` as a required prompt-level input across the batch'

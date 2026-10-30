@@ -48,9 +48,13 @@ Implement tasks from an OpenSpec change.
    - Dynamic instruction based on current state
    - Optional `context`: current required project instruction input from the selected root
    - Optional `operationGuidance`: current advisory guidance for apply
+   - `missingArtifacts` (when present): required artifact ids with no output
+   - `missingPrerequisites` (when present): every artifact still to build before apply, including `missingArtifacts` and what they depend on, in build order
+   - `warnings` (when present): problems the CLI found in the change, such as missing delta specs that make `openspec validate` fail
 
    **Handle states:**
-   - If `state: "blocked"` (missing artifacts): show message, suggest using `/openspec-continue-change` (if it is not installed, run `openspec status --change "<name>" --json` to see the next artifact and `openspec instructions <artifact-id> --change "<name>" --json` for how to create it)
+   - If `state: "blocked"`: show the message and pause implementation; suggest using `/openspec-continue-change` to create them. If `/openspec-continue-change` is not installed, suggest completing the missing artifacts: run `openspec status --change "<name>" --json`, then select a `ready` artifact (not `skipped` or `blocked`) that unblocks apply: one listed in `missingPrerequisites` from the apply instructions JSON, which names every artifact apply still waits on, directly or through `requires`, in build order (use `missingArtifacts` when it is absent). Take the first `ready` one in that order. Never pick a `ready` artifact outside that set; it advances unrelated work and leaves apply blocked. If no `ready` artifact is in that set, create nothing: report `missingArtifacts` and the status of each of their prerequisites, and ask the user how to proceed. Otherwise use `openspec instructions "<artifact-id>" --change "<name>" --json` for its rules and template. Keep the selected `--store <id>` on both commands.
+   - If `warnings` is non-empty: show every warning and pause before implementing or reporting completion, even when `state` is `"ready"` or `"all_done"`. Suggest the repair each warning names, and proceed only if the user chooses to continue anyway. After any repair, rerun the apply instructions and use the refreshed output.
    - If `state: "all_done"`: congratulate, suggest archive
    - Otherwise: proceed to implementation
 
@@ -101,6 +105,7 @@ Implement tasks from an OpenSpec change.
    - Implementation reveals a design issue → suggest updating artifacts
    - A task needs work beyond what the spec and tasks describe, or you are tempted to drop, narrow, defer, or accept exceptions to specified behavior to make it fit → surface the added scope and ask; do not absorb it silently
    - Error or blocker encountered → report and wait for guidance
+   - The rerun apply instructions return a warning not already shown → show it, suggest the repair it names, and ask before continuing
    - User interrupts
 
 7. **On completion or pause, show status**
@@ -108,6 +113,7 @@ Implement tasks from an OpenSpec change.
    Display:
    - Tasks completed this session
    - Overall progress: "N/M tasks complete"
+   - If the last apply instructions still returned `warnings` that were continued past, list them again with a note that `openspec validate` or archiving may fail until they are resolved
    - If all done: suggest archive
    - If paused: explain why and wait for guidance
 
@@ -178,6 +184,7 @@ What would you like to do?
 - Consider every guidance entry; explain any inapplicable or conflicting advice
 - Do not copy runtime context or operation guidance into implementation files or planning artifacts
 - Preserve CLI-controlled blocked/ready/all-done behavior and completion criteria
+- Show and pause on `warnings` from the apply instructions before implementing or reporting completion, and rerun instructions after any repair
 
 **Fluid Workflow Integration**
 

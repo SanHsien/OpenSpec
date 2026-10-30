@@ -3,12 +3,12 @@
   "branch": "main",
   "reviewed_through": "6d04a1b58dedc95729d34e4f223d9d483aae210a",
   "reviewed_date": "2026-10-30",
-  "reviewed_pr_through": 2172,
+  "reviewed_pr_through": 2174,
   "reviewed_issue_through": 2173,
   "monitored": [
     {
       "item": "pr#2168",
-      "head": "9e0cd2d002a4c656e838b7c40147088f65da591e",
+      "head": "c97915377ad80f6295006374ba880a91b0807368",
       "state": "open"
     },
     {
@@ -18,7 +18,7 @@
     },
     {
       "item": "pr#2170",
-      "head": "2a6adab529d364c0acb3ffb73d02147c1d3ff083",
+      "head": "ec439694116e2d98c927665d7ce4b611b0788e5f",
       "state": "open"
     },
     {
@@ -28,7 +28,12 @@
     },
     {
       "item": "pr#2172",
-      "head": "4d518c14a10592f36f4d98236b2dab09b17b23aa",
+      "head": "945a4b355f1314b2c67732994958166ccb7aaa11",
+      "state": "open"
+    },
+    {
+      "item": "pr#2174",
+      "head": "634908e4d436b53c6ce4f7878c64c3cf5c87837b",
       "state": "open"
     }
   ]

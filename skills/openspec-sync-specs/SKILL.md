@@ -43,11 +43,17 @@ This is an **agent-driven** operation - you will read delta specs and directly e
 
 3. **Find delta specs**
 
-   Use `artifactPaths.specs.existingOutputPaths` from the status JSON as the
-   only source of delta spec paths. If the `specs` entry is missing or
-   `existingOutputPaths` is empty, report that there are no delta specs to sync,
+   The delta-spec artifacts are every `artifactPaths.<id>` entry in the status
+   JSON whose `outputPath` is under `specs/`. Artifact ids come from the active
+   schema, so do not assume the id `specs`. Their combined
+   `existingOutputPaths` (called `existingOutputPaths` below) are the only
+   source of delta spec paths. If no entry's `outputPath` is under `specs/`, or
+   all of their `existingOutputPaths` are empty, report that there are no delta specs to sync,
    do not infer them from other artifacts, and stop without requesting artifact
    instructions or writing a main spec.
+
+   A capability delta spec must have the path shape `specs/<capability-path>/spec.md`.
+   If any file under `specs/` (such as `notes.md` or `<capability-path>/notes.md`) contains delta operation headers (`## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, `## RENAMED Requirements`), stop before writing any main spec, report the offending file's path, and tell the user to move its requirements into the capability's `spec.md`. Entries without those sections are notes — leave them out of the sync without stopping.
 
    Sync every path in `existingOutputPaths` unless the caller narrowed the set.
    A caller narrows it by naming an explicit list of complete entries from
@@ -73,19 +79,27 @@ This is an **agent-driven** operation - you will read delta specs and directly e
 
 4. **For each delta spec, apply changes to main specs**
 
-   Before the first main-spec write, obtain one current specs-rule snapshot:
-   - If archive invoked this workflow inline and supplied a valid snapshot from
-     `openspec instructions specs --change "<name>" --json`, reuse it and do not
-     fetch the same instructions again.
-   - Otherwise run that command once now with the same selected-root flags.
+   Before the first main-spec write, obtain one current specs-rule snapshot for
+   each delta-spec artifact id from step 3:
+   - If archive invoked this workflow inline and supplied valid snapshots from
+     `openspec instructions <spec-artifact-id> --change "<name>" --json`, reuse
+     them and do not fetch the same instructions again.
+   - Otherwise, or for any id the caller supplied no snapshot for, run that
+     command once now for each delta-spec artifact id with the same selected-root flags.
+   - The ids `apply` and `archive` cannot be looked up this way: the CLI answers
+     `openspec instructions apply` and `openspec instructions archive` with
+     operation instructions, not artifact rules. If a delta-spec artifact has one
+     of those ids, do not run the lookup and never use operation instructions as
+     rules; report that the schema must rename that artifact, and stop before
+     writing any main spec or moving the change.
    - If the direct lookup exits non-zero or returns invalid artifact-instruction
      JSON, report the error and stop before writing any main spec. Do not treat the
      failure as an absent rule set.
    - A valid response with omitted `rules` means no artifact rules are configured
      and the existing semantic merge continues.
 
-   Apply returned `rules` only to the content and form of the main specs produced
-   by this merge. Artifact rules are not operation guidance and cannot change
+   Apply each artifact's returned `rules` only to the content and form of the
+   main specs merged from its own deltas. Artifact rules are not operation guidance and cannot change
    selected roots, delta paths, CLI checks, or workflow steps. Use their text as
    constraints without copying it verbatim into a main spec or summary.
 
@@ -94,6 +108,21 @@ This is an **agent-driven** operation - you will read delta specs and directly e
    a. **Read the delta spec** to understand the intended changes
 
    b. **Read the main spec** at `<planningHome.root>/openspec/specs/<capability-path>/spec.md` (may not exist yet)
+
+      **Check containment first, before any read, create, or update.** Resolve the
+      real specs root (`<planningHome.root>/openspec/specs/` with symlinks
+      followed, e.g. `realpath`). Then resolve the destination the same way:
+      `spec.md` itself when it exists, and every existing parent directory up to
+      the specs root, so a new capability is checked through its nearest existing
+      parent. If any of them resolves outside the real specs root (for example a
+      symlinked capability directory or `spec.md` that points elsewhere), do not read, create, or modify it. Stop the sync for that capability and report the
+      path and where it resolves. Never create a missing directory under a parent
+      that resolves outside the root.
+
+      **If it does not exist yet** (a new capability), match what `openspec archive` does:
+      only ADDED requirements may be applied - step d creates the spec from them.
+      MODIFIED and RENAMED have no requirement to act on, so stop the sync for that
+      capability and report the error.
 
    c. **Apply changes intelligently**:
 
@@ -121,7 +150,7 @@ This is an **agent-driven** operation - you will read delta specs and directly e
            title, Purpose, Requirements header, or a canonical requirement's
            statement, scenarios, or fenced examples;
         5. the change's `.openspec.yaml` declares `retire_capabilities: true`;
-        6. the `spec.md` resolves inside the real specs root (do not follow a
+        6. the `spec.md` resolves inside the real specs root and still passes the step b containment check (do not follow a
            capability-directory symlink to delete an external file).
         If removing the selected requirements would leave no requirement blocks and
         any retirement condition is not satisfied, do not modify the main spec. Stop
@@ -254,8 +283,10 @@ Main specs are now updated. The change remains active - archive when implementat
 - If something is unclear, ask for clarification
 - Show what you're changing as you go
 - The operation should be idempotent - running twice should give same result
-- Use only `artifactPaths.specs.existingOutputPaths`; never infer delta specs from unrelated artifacts
+- Use only the `existingOutputPaths` of artifacts whose `outputPath` is under `specs/`, whatever their id; never infer delta specs from unrelated artifacts
 - Honor a caller-supplied subset of `existingOutputPaths`; never widen it back to the full list
-- Fetch specs instructions once for direct sync, or reuse the archive-supplied snapshot inline
+- Write, create, or delete a main spec only where it and every parent resolve inside the real `<planningHome.root>/openspec/specs/` root; never follow a symlink out of it, and stop that capability's sync instead
+- Fetch each delta-spec artifact's instructions once for direct sync, or reuse the archive-supplied snapshots inline
+- The ids `apply` and `archive` cannot be looked up this way; never use operation instructions as artifact rules
 - Stop before every main-spec write on a non-zero or invalid JSON specs-instruction response
 - Artifact rules constrain only the specs being written and are never copied into output files

@@ -681,37 +681,38 @@ Commit 不變（`6d04a1b`）；PR `#2154`→`#2161`；Issue 不變（`#2157`）�
 
 ### PR 逐筆裁決
 
-以下均為 **defer（延後）**，不是判定缺陷不存在。這輪規格是完成審查與水位修正；產品修正各有不同的測試、生成鏡像與相容性要求，列入 ROADMAP，不能只提高水位就宣稱產品已修復。狀態與 head 為本輪查詢快照。
+下表為 2026-10-30 第二輪重審結果：#2168／#2169／#2170／#2171／#2174 對應缺口已在本 fork 共用模板修補（agent 指示層，非 CLI 執行期防護），#2172 維持 defer。狀態與 head 為本輪查詢快照。
 
-| PR／狀態／head | 裁決 | 本 fork 的證據與延後理由 | 重看條件 |
+| PR／狀態／head | 裁決 | 本 fork 的證據與比對理由 | 重看條件 |
 | --- | --- | --- | --- |
-| [#2168](https://github.com/Fission-AI/OpenSpec/pull/2168)／open／`9e0cd2d002a4c656e838b7c40147088f65da591e` | defer | archive、bulk-archive、sync 三個 workflow 仍硬編 `artifactPaths.specs` 與 `instructions specs`，自訂 artifact id 的問題適用。PR 依 `outputPath` 找 artifact、每個 id 各取規則，但仍收集所有 Markdown，沒有解決 #2173。不可單獨照搬而保留錯誤 delta 集合。 | 下一輪 sync／archive 修補時與 #2173 一起處理；若 PR head／狀態改變先重審。需測自訂 id、多 artifact 規則、空集合與非 spec.md 拒絕，再更新生成鏡像及 parity。 |
-| [#2169](https://github.com/Fission-AI/OpenSpec/pull/2169)／closed／`18e6bc87bda8fb75dc66520977de402e3e337f6c` | defer | PR 在每次 main-spec 讀寫前補 realpath 防護；本 fork `sync-specs.ts` 仍只在刪除最後 requirement 的特殊情況寫出 containment 規則。上游以不支援 symlink 關閉 #2164，不能當成本 fork 已安全的證據；CLI 的 `specs-apply.security.test.ts` 也不能代替 agent workflow 防護。 | 下一輪 sync／archive 安全修補優先處理，不必等上游重新開啟；需涵蓋 Windows junction、外部 spec.md、缺檔時最近既有父目錄，以及拒絕後不寫入、不歸檔。head／狀態變動亦重審。 |
-| [#2170](https://github.com/Fission-AI/OpenSpec/pull/2170)／open／`2a6adab529d364c0acb3ffb73d02147c1d3ff083` | defer | CLI `instructions.ts` 已回傳並顯示 `warnings`，但本 fork `apply-change.ts` 只按 blocked／all_done 分流，未讀 warnings。PR 新增告警暫停與修補後重讀；本 fork 的共用 `getApplyInstructions()` 已與上游 optionalWorkflow 結構不同，需適配，不能直接替換整檔。 | 下一輪 apply 模板修補，或 PR head／狀態變動；先測 ready／all_done 告警、明確選擇繼續、修補後刷新與新告警，再檢查 skill／command／生成鏡像一致。 |
-| [#2171](https://github.com/Fission-AI/OpenSpec/pull/2171)／open／`61fde7c6ecbb279665af1c240cf290dc6d045553` | defer | CLI 已有按依賴順序回傳的 `missingPrerequisites`；本 fork apply 模板仍泛指 continue 或查 status，沒有把選擇限制在該集合。PR 改的是上游 `BLOCKED_STATE_HANDOFF`，該常數不在本 fork；需與 #2170 一起改共用模板，保留 store flags 與缺欄位退路。 | 下一輪 apply 模板修補，或 PR head／狀態變動；測無關 ready artifact、間接依賴、舊 CLI 缺欄位、集合內無 ready 時不建立檔案。 |
-| [#2172](https://github.com/Fission-AI/OpenSpec/pull/2172)／open／`4d518c14a10592f36f4d98236b2dab09b17b23aa` | defer | 本 fork `ZshInstaller.getZshrcPath()` 與 completion 提示均固定 home 的 .zshrc，ZDOTDIR 問題適用。PR 改安裝、解除安裝候選與提示，且對非絕對 ZDOTDIR 回退 home；需確認相對路徑政策並做真實 zsh 驗證，Windows gate 不能證明 shell 載入成功。 | 有 ZDOTDIR 使用需求或安排 POSIX completion 驗收，或 PR head／狀態變動；測絕對／空白／相對／未設定值、舊 home 區塊清理、重裝往返及真實 zsh 載入。 |
+| [#2168](https://github.com/Fission-AI/OpenSpec/pull/2168)／open／`c97915377ad80f6295006374ba880a91b0807368` | 部分採用／已自行修補 | archive、bulk-archive、sync 工作流已改為依 `outputPath` 位於 `specs/` 判定自訂 artifact id，不再寫死 `specs`。最新 head 新增 `apply`／`archive` 保留指令停止防護；本 fork 現有自訂 id 與非 specs 契約已由 `test/core/templates/containment-and-custom-id.test.ts` 驗證，行為健全。重新釘住新 head。 | 已納入保留 id 停止防護（`sync-specs.ts`，由 `containment-and-custom-id.test.ts` 的 "disallows operation instructions (apply, archive) as artifact rules" 釘住）；上游合併或關閉時重審差異。 |
+| [#2169](https://github.com/Fission-AI/OpenSpec/pull/2169)／closed／`18e6bc87bda8fb75dc66520977de402e3e337f6c` | 已自行修補（指示層） | 上游雖以不支援 symlink 關閉，本 fork 已在模板 agent 指示層補足 Step 4.b `fs.realpath` 目錄防逃逸檢查與 Guardrails 寫入防護，於 agent 指示層要求不寫入專案外 main spec。由 `test/core/templates/containment-and-custom-id.test.ts` 驗證。 | 上游若重新討論 symlink/junction 安全策略時重審。 |
+| [#2170](https://github.com/Fission-AI/OpenSpec/pull/2170)／open／`ec439694116e2d98c927665d7ce4b611b0788e5f` | 已自行修補 | 最新 head 補充了 docs-lab 與詳細測試。本 fork 已於 `apply-change.ts` 共用模板落實非空 `warnings` 暫停門檻、修復後重新獲取指示、以及任務迴圈中新告警暫停邏輯，由 `test/core/templates/apply-warnings-gate.test.ts` 驗證，依本 fork 結構適配。重新釘住新 head。 | 上游合併或告警結構變動時重審。 |
+| [#2171](https://github.com/Fission-AI/OpenSpec/pull/2171)／open／`61fde7c6ecbb279665af1c240cf290dc6d045553` | 已自行修補 | 本 fork 已於 `apply-change.ts` 將 blocked 狀態之提示選擇嚴格限制在 `missingPrerequisites`，不提供無關的 ready artifact，由 `test/core/templates/apply-blocked-selection.test.ts` 驗證。維持釘住。 | 上游合併或依賴格式變動時重審。 |
+| [#2172](https://github.com/Fission-AI/OpenSpec/pull/2172)／open／`945a4b355f1314b2c67732994958166ccb7aaa11` | defer | 最新 head 完善了相對路徑 ZDOTDIR 回退 `~/.zshrc`、chmod 0o444 卸載測試等。本 fork 目前維護重點為 Windows 原生環境，暫無 POSIX/Zsh completion 載入驗收需求，維持 defer。重新釘住新 head。 | 有 ZDOTDIR 使用需求或安排 POSIX completion 驗收時重審。 |
+| [#2174](https://github.com/Fission-AI/OpenSpec/pull/2174)／open／`634908e4d436b53c6ce4f7878c64c3cf5c87837b` | 已自行修補對齊 | 上游針對 #2173 提案修正，限定只有 `specs/<capability-path>/spec.md` 為 delta spec，遇含 delta 標頭之 stray files 則停止／阻擋，無 delta 標頭之筆記檔案則排除不報錯。本 fork 已落實相同規則，並採用「report the offending file's path」對齊上游精神，由 `test/core/templates/delta-spec-shape.test.ts` 驗證。釘入 monitored。 | 上游合併時重審。 |
 
 ### Issue 逐筆裁決
 
 | Issue／狀態 | 裁決 | 理由與本 fork 對照 | 重看條件 |
 | --- | --- | --- | --- |
-| [#2163](https://github.com/Fission-AI/OpenSpec/issues/2163)／open | defer | 自訂 schema 把 delta artifact 命名為其他 id 時 archive 漏同步；本 fork 的硬編 id 確實存在。由 #2168 追修，不能因 CLI 已能解析 schema 而略過 skill 缺口。 | 與 #2168／#2173 的 sync 修補一起驗證；issue 有實質新證據時重審。 |
-| [#2164](https://github.com/Fission-AI/OpenSpec/issues/2164)／closed（not planned） | defer | 已讀維護者關閉留言，理由是 symlink 不是官方支援情境；但防止外部路徑寫入仍是本 fork 的邊界，採用 #2169 的安全問題判定，不採用上游「不處理」作為豁免。 | 下一輪 sync 安全修補，依 #2169 的 Windows 路徑驗收；不以重新開 issue 為前提。 |
-| [#2165](https://github.com/Fission-AI/OpenSpec/issues/2165)／open | defer | apply blocked 時可挑到無關 ready artifact；本 fork 尚未將選擇綁定 `missingPrerequisites`。與 #2171 同一缺口，不重複實作。 | 下一輪 apply 模板修補，沿用 #2171 的依賴集合驗收；issue 新證據亦重審。 |
-| [#2166](https://github.com/Fission-AI/OpenSpec/issues/2166)／open | defer | CLI 已有缺 delta 或 stray file 的 warnings，模板仍忽略；現有 `apply-instructions-warnings.test.ts` 只證明 CLI 輸出，不能證明 agent 暫停。與 #2170 同案。 | 下一輪 apply 模板修補，沿用 #2170 的告警驗收；issue 新證據亦重審。 |
+| [#2163](https://github.com/Fission-AI/OpenSpec/issues/2163)／open | 已自行修補 | 自訂 schema 把 delta artifact 命名為其他 id 時 archive 漏同步；本 fork 已在 sync、archive、bulk-archive 模板中依 `outputPath` 位於 `specs/` 判定自訂 artifact id，不再寫死 `specs`。由 `test/core/templates/containment-and-custom-id.test.ts` 驗證。 | 上游 PR #2168 合併或有規格變更時重審。 |
+| [#2164](https://github.com/Fission-AI/OpenSpec/issues/2164)／closed（not planned） | 已自行修補 | 已讀維護者關閉留言（symlink 非官方支援），但防止外部路徑寫入仍屬安全底線。本 fork 在 agent 指示層補足 Step 4.b `fs.realpath` 目錄防逃逸檢查與 Guardrails 寫入防護。由 `test/core/templates/containment-and-custom-id.test.ts` 驗證。 | 上游重新開啟或調整路徑安全政策時重審。 |
+| [#2165](https://github.com/Fission-AI/OpenSpec/issues/2165)／open | 已自行修補 | apply blocked 時可挑到無關 ready artifact；本 fork 已在 `apply-change.ts` 將選擇範圍嚴格限制在 `missingPrerequisites`，由 `test/core/templates/apply-blocked-selection.test.ts` 驗證。 | 上游 PR #2171 合併或有規格變更時重審。 |
+| [#2166](https://github.com/Fission-AI/OpenSpec/issues/2166)／open | 已自行修補 | 本 fork 已於 `apply-change.ts` 加入 `warnings` 暫停門檻、修復後重新獲取指示、以及任務迴圈中新告警暫停邏輯，由 `test/core/templates/apply-warnings-gate.test.ts` 驗證。 | 上游 PR #2170 合併或告警結構變更時重審。 |
 | [#2167](https://github.com/Fission-AI/OpenSpec/issues/2167)／open | defer | 提案以可見 ID 取代名稱優先匹配，牽涉 parser、validate、archive 與連結語意，並依賴 #1979／已延後的 beta skills #2134；屬產品規格變更，非單純維護補丁。本輪未驗證提案聲稱的歷史重建數據。 | 維護者決定引入穩定 ID，或正式採用 #1979／#2134 前重新審規格；需涵蓋無 ID 向後相容、重複 ID、改名與移除 ID 的回歸。 |
-| [#2173](https://github.com/Fission-AI/OpenSpec/issues/2173)／open | defer | 本 fork sync 明寫「Sync every path in existingOutputPaths」，schema glob 可包含 notes.md；CLI 的 `discoverSpecFiles` 只認 capability 下的 spec.md。故 agent 與 CLI 有真實集合差異，#2168 改 id 並未修復。必須在第一次 main-spec 寫入前拒絕 stray files，最後才 validate 會太晚。 | 下一輪 sync／archive 修補，與 #2168 一起測 notes.md、巢狀 capability、合法 spec.md、caller subset，以及拒絕時 main spec 與 change 皆不動；issue 新修正亦重審。 |
+| [#2173](https://github.com/Fission-AI/OpenSpec/issues/2173)／open | 已自行修補 | 本 fork 已於 sync、archive、bulk-archive 限制 delta spec 必須結尾為 `specs/<capability-path>/spec.md`；遇含 delta 標頭之 stray files 則停止／阻擋並以「report the offending file's path」回報，無 delta 標頭之筆記檔案則排除不報錯。由 `test/core/templates/delta-spec-shape.test.ts` 驗證。 | 上游 PR #2174 合併時重審。 |
 
 ### 水位與追蹤
 
 - commit 水位不變：`6d04a1b58dedc95729d34e4f223d9d483aae210a`。
-- PR 水位 `2161` → `2172`；issue 水位 `2157` → `2173`；日期更新為 `2026-10-30`。水位代表已逐筆裁決，並非已合併或已修復。
-- 5 筆 PR 全部釘入 baseline 的 `monitored`（本輪 head 與 open／closed 狀態）。後續 head／狀態漂移會讓 strict 再紅，不以提高水位永久隱藏延後項目。工具目前只監看 PR；issue 的重看條件與後續工作統一放 ROADMAP，每週審查時人工核對相關 issue。
+- PR 水位推至 `2174`（覆蓋新開 PR #2174）；issue 水位維持 `2173`；日期更新為 `2026-10-30`。
+- 6 筆 PR 全部釘入 baseline 的 `monitored`（PR #2168、#2170、#2172 重新釘住最新 head，新增 PR #2174，保留 #2169 與 #2171）。後續 head／狀態漂移會讓 strict 再紅，不以提高水位永久隱藏延後項目。
 - ROADMAP 頁首與現況段更新為 10-30、fork SHA `3f260c7fcaa432ecd65e51bfd42ab0895cb045d2`；保留 Node 政策待決列。原依賴裁決列已完成並自 ROADMAP 移除。
 
 ### 本輪驗證範圍
 
 - 修改前 `pwsh -NoProfile -File tools\dev_check.ps1`：exit 1，結尾 `Upstream baseline watermark check failed with exit code 1`；完整輸出在已忽略的 `upstream-triage-before.log`。
 - 重跑 `python tools/check_dependency_freshness.py --strict`：20 個套件仍為 9 OUTDATED、11 OK、0 CHECK_FAILED，exit 1；原先 9 筆裁決全部保留，工具語意與月排程政策不變，輸出在已忽略的 `upstream-triage-freshness.log`。
-- 修改後 `pwsh -NoProfile -File tools\dev_check.ps1`：exit 0，結尾 `WINDOWS DEV CHECK GREEN`；Python 編譯、15 個維護工具測試、Markdown 連結、4 個 fork hygiene 測試及 upstream strict 全通過，5 個 monitored head／狀態均未漂移。輸出留在已忽略的 `upstream-triage-after.log`；依賴 strict 的預期 exit 1 不等於 upstream strict 失敗。
-- 本輪僅改審查文件、路線圖及 baseline 資料，沒有產品或工具 bug 修正，因此新增先紅後綠回歸測試不適用；上述閘門的紅轉綠驗證水位修正。未執行產品修補，也不宣稱延期缺陷已修復；不變更產品 CHANGELOG 或全庫審查快照 REVIEW.md。
+- 修改後 `pwsh -NoProfile -File tools\dev_check.ps1`：exit 0，結尾 `WINDOWS DEV CHECK GREEN`；全套 vitest 167 檔通過（1 檔略過，4627 tests）；monitored 6 筆 head／狀態均未漂移。
+- 本輪改了 4 個 workflow 模板（apply、archive、bulk-archive、sync）、4 個生成的 `skills/openspec-*/SKILL.md` 與 parity hash，新增 4 個 `test/core/templates/*.test.ts`；修補位於 agent 指示層，CLI 執行期的 realpath 檢查（`src/core/archive.ts`、`src/core/specs-apply.ts`）本輪未改。

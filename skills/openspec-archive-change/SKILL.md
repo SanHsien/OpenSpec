@@ -87,10 +87,16 @@ Archive a completed change in the experimental workflow.
 
 4. **Assess delta spec sync state**
 
-   Use `artifactPaths.specs.existingOutputPaths` from status JSON as the only
-   delta-spec source. If the `specs` entry is missing or
-   `existingOutputPaths` is empty, proceed without a sync prompt and do not infer
-   delta specs from other artifacts.
+   The delta-spec artifacts are every `artifactPaths.<id>` entry in status JSON
+   whose `outputPath` is under `specs/`. Artifact ids come from the active
+   schema, so do not assume the id `specs`. Their combined
+   `existingOutputPaths` are the only delta-spec source; keep each reported path
+   as-is when resolving its capability path. If no entry's `outputPath` is under
+   `specs/`, or all of their `existingOutputPaths` are empty, proceed without a
+   sync prompt and do not infer delta specs from other artifacts.
+
+   A capability delta spec must have the path shape `specs/<capability-path>/spec.md`.
+   If any file under `specs/` (such as `notes.md` or `<capability-path>/notes.md`) contains delta operation headers (`## ADDED Requirements`, `## MODIFIED Requirements`, `## REMOVED Requirements`, `## RENAMED Requirements`), stop without syncing or archiving, report the offending file's path, and tell the user to move its requirements into the capability's `spec.md`. Entries without those sections are notes — leave them out of the sync without stopping.
 
    **If delta specs exist:**
    - Compare each delta spec with its corresponding main spec at `<planningHome.root>/openspec/specs/<capability-path>/spec.md` (use the store-aware `planningHome.root` from step 2, not a hardcoded repo path)
@@ -108,17 +114,23 @@ Archive a completed change in the experimental workflow.
    - Anything else — ask again rather than archiving
 
    Before a selected sync writes any main spec, run
-   `openspec instructions specs --change "<name>" --json` once with the same
-   selected-root flags. Require a zero exit status and valid artifact-instruction
-   JSON. If the lookup fails or returns invalid JSON, report the error and stop
+   `openspec instructions <spec-artifact-id> --change "<name>" --json` once for
+   each delta-spec artifact id from step 4, with the same selected-root flags. Require a zero exit status and valid artifact-instruction
+   JSON.
+   The ids `apply` and `archive` cannot be looked up this way: the CLI answers
+   `openspec instructions apply` and `openspec instructions archive` with
+   operation instructions, not artifact rules. If a delta-spec artifact has one
+   of those ids, do not run the lookup and never use operation instructions as
+   rules; report that the schema must rename that artifact, and stop before
+   writing any main spec or moving the change. If the lookup fails or returns invalid JSON, report the error and stop
    before writing any main spec or moving the change. A valid response with omitted
    `rules` is the no-rules case. Apply returned `rules` only to the content and
    form of main specs produced by this merge; do not use them as archive guidance,
    change CLI behavior, or copy the rule text into any output file.
 
-   Then run the `openspec-sync-specs` workflow inline (agent-driven intelligent merge) for change '<name>', passing the delta spec analysis and the fetched specs-rule snapshot from above, and wait for it to finish. The inline sync must reuse that snapshot without fetching `specs` instructions again. Do not delegate it to a background task — step 5 would move `changeRoot` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
+   Then run the `openspec-sync-specs` workflow inline (agent-driven intelligent merge) for change '<name>', passing the delta spec analysis and the specs-rule snapshots fetched above, each labeled with its artifact id, and wait for it to finish. The inline sync must reuse those snapshots without fetching artifact instructions again. Do not delegate it to a background task — step 5 would move `changeRoot` out from under a sync that is still reading it, leaving the change archived and the main specs never updated. If your agent can only run it by delegation, delegate synchronously and wait for the result.
 
-   Then re-run the comparison from the top of this step against every capability that has a delta spec in `artifactPaths.specs.existingOutputPaths` — not only the ones the sync reports it touched. A successful sync leaves nothing left to apply, so each capability must now read as already synced:
+   Then re-run the comparison from the top of this step against every capability that has a delta spec in the delta-spec artifacts' `existingOutputPaths` from step 4 — not only the ones the sync reports it touched. A successful sync leaves nothing left to apply, so each capability must now read as already synced:
    - ADDED requirements present
    - MODIFIED requirements carrying the scenario and description changes named in the delta, with their other scenarios intact
    - REMOVED requirements gone — and where this sync retired a capability (removed its last requirement, leaving `## Requirements` empty), its main spec deleted rather than left empty; a spec the sync deliberately kept and reported is also a match
@@ -172,8 +184,10 @@ Archive a completed change in the experimental workflow.
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
 - If sync is requested, run the `openspec-sync-specs` workflow inline (agent-driven)
+- Write, create, or delete a main spec only where it and every parent resolve inside the real `<planningHome.root>/openspec/specs/` root; never follow a symlink out of it, and stop that capability's sync instead
 - Never archive while a spec sync is still in flight — run the sync inline and verify the main specs before moving `changeRoot`
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting
+- The ids `apply` and `archive` cannot be looked up this way; never use operation instructions as artifact rules
 - Apply relevant runtime context and report conflicts; operation guidance remains advisory
 - Consider every guidance entry and explain any inapplicable or conflicting advice
 - Existing CLI checks, resolved paths, prompts, and command contracts are unchanged
