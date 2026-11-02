@@ -716,3 +716,84 @@ Commit 不變（`6d04a1b`）；PR `#2154`→`#2161`；Issue 不變（`#2157`）�
 - 重跑 `python tools/check_dependency_freshness.py --strict`：20 個套件仍為 9 OUTDATED、11 OK、0 CHECK_FAILED，exit 1；原先 9 筆裁決全部保留，工具語意與月排程政策不變，輸出在已忽略的 `upstream-triage-freshness.log`。
 - 修改後 `pwsh -NoProfile -File tools\dev_check.ps1`：exit 0，結尾 `WINDOWS DEV CHECK GREEN`；全套 vitest 167 檔通過（1 檔略過，4627 tests）；monitored 6 筆 head／狀態均未漂移。
 - 本輪改了 4 個 workflow 模板（apply、archive、bulk-archive、sync）、4 個生成的 `skills/openspec-*/SKILL.md` 與 parity hash，新增 4 個 `test/core/templates/*.test.ts`；修補位於 agent 指示層，CLI 執行期的 realpath 檢查（`src/core/archive.ts`、`src/core/specs-apply.ts`）本輪未改。
+
+## 2026-11-02：上游積壓審查（commit 6d04a1b..27c0515、PR #2176–#2192、issue #2175–#2191、monitored 漂移）
+
+### 起因
+
+`Upstream check` 與 `Windows Dev Check`（後者也比對水位）同因為紅：`python tools/check_upstream_updates.py --strict` exit 1，報 18 個 commit、10 個 PR、8 個 issue 未審，另有 5 個 monitored PR head 漂移。上游 `main` 於 2026-10-30 一次合併了一批已在前幾輪審過的 PR，本輪新增的實質工作只有逐筆對帳。
+
+### 四個面向
+
+| 面向 | 查法 | 結果 |
+| --- | --- | --- |
+| Commit | `git fetch upstream`，`git log 6d04a1b..upstream/main`（18 筆，tip `27c0515724decc633818c735ee596481eec78a8b`） | 18 筆全是已審 PR 的 squash 結果或 Dependabot／release bot，逐筆對應見下表 |
+| PR（`--state all`） | 檢查器與 `gh pr view` | 新 10 筆（#2176–#2192，缺號為 issue），逐筆讀 metadata；#2192 與 5 個 monitored 另讀目前 head 的完整 diff |
+| Issue（`--state all`） | 檢查器與 `gh issue view` | 新 8 筆（#2175–#2191） |
+| 分支 | 未開分支軸（baseline 無 `check_branches`），上游新增 `fix/minimatch-ghsa-g3hv` 對應 PR #2192，不另列 | 不適用 |
+
+### Commit 對帳（18 筆）
+
+| Commit | 對應 PR | 結論與證據 |
+| --- | --- | --- |
+| `d68fc51` | #2160 | 已於 2026-10-28 判不適用（獨立執行檔安裝器與發布，本 fork 無對應檔案）。 |
+| `a6cd3bc` | #2131 | 本 fork 已自行修補且更嚴：`src/core/parsers/code-fence.ts:23-26` 以 `line.slice(fenceMatch[0].length).includes('`')` 判定，不依賴 `(.*)$`，CRLF 行不會失效；與上游 tip 只差 7 行註解與排版。2026-10-28 已記。 |
+| `cb1adee` | #2133 | 已自行修補：`spec-structure.ts` 的 `REQUIREMENT_HEADER` 用 `###\s*Requirement:`，有 `test/core/parsers/spec-structure-unspaced-header.test.ts`。2026-10-28 已記。 |
+| `ae7ad75` | #2127 | 核心已自行修補（`readConfigParseError` 與 `validate.ts` 的 `unparseable_config` 失敗路徑，有 `test/commands/validate-unparseable-config.test.ts`）。上游合併前最後一個 commit 另區分「路徑存在但讀不了」（`unreadable_config`，例如 config 路徑是目錄），本 fork 這種情況仍 exit 1，只是訊息寫「Could not parse」；屬訊息精度，不採用。重看條件：有人回報被這個訊息誤導。 |
+| `18a75a5` | #2077 | 先前已判新功能（store discovery，見 `docs/DECISIONS.md` 561 行）、不採用；本輪合併的是「依 origin 名稱建議 store」，仍是功能擴張，沿用。 |
+| `dc37609` | #2079 | 先前已判新功能（見同一行；scenario 缺 WHEN／THEN 的警告，會改變 `validate` 對既有規格的輸出），沿用。重看條件：維護者要把 validate 加嚴。 |
+| `c499010` | #2178 | **採用**，見下節。 |
+| `33c6f93` | #2159 | 2026-10-28 已延後，ROADMAP 近期表「決定 Node 最低支援版本」；現已在上游合併（`engines` 改 `>=22.12.0`），fork 的 `package.json` 仍是 `>=20.19.0`。上游合併不改變「破壞性支援政策須維護者決定」的結論；本機 Node 為 v26.12.1，沒有阻擋理由，但這是維護者的決定。 |
+| `05cc75f` | #2172 | 2026-10-30 判 defer（本 fork 重點是 Windows，無 ZDOTDIR 使用需求），PR 在 2026-10-30 22:51Z 合併，最終 head `b008daa`。與 pinned head 差 2 個 commit、1 個檔案（`test/core/completions/installers/zsh-installer.test.ts` +3），只加「以 root 執行或檔案仍可寫時跳過唯讀卸載測試」。結論不變，ROADMAP 對應列證據改為已合併。 |
+| `6368683`、`e55e533` | #2158、#2179 | 依賴升級。#2158 已於 2026-10-28 判跳過；#2179（typescript-eslint 8.71.2→8.72.0，`flake.nix`＋lockfile 68 行）同類，由本 fork 的依賴新鮮度流程處理（2026-10-30 逐項裁決表）。fork `package.json` 為 `typescript-eslint ^8.65.0`、`vite ^7.3.7`、`eslint ^10.5.0`。 |
+| `d924004`、`50949cd`、`4abbb37` | #2149、#2153、#2183 | Actions 群組與 website 依賴群組，先前已判（`docs/DECISIONS.md` 579 行）由本 fork 自己的 Dependabot 與 SHA 釘選處理（#2183 是同一群組的後續批次）。 |
+| `0c3d1c6` | #2161 | 2026-10-28 已判不適用（上游 `openspec.dev` routing Worker）。 |
+| `625834c` | #2107 | 先前已判上游社群文件，略過（`docs/DECISIONS.md` 569 行）。 |
+| `ebdd9a5` | #2128 | 先前已判上游自己的 `openspec/` 內容整理，不同步（`git diff --stat upstream/main -- openspec/changes` 顯示 151 檔差異，fork 不追）。 |
+| `27c0515` | #2176 | Version Packages（release bot），只合併 changeset 並改版本，不追。 |
+
+### 本輪新 PR 逐筆（採用 1、不適用／略過 9）
+
+| 上游 | 結論 | 證據與觸發條件 |
+| --- | --- | --- |
+| #2178（merged，head `183e820`；`test/commands/store-git.test.ts`、`store-remote.test.ts` 各 +5/-1，`clay-good`） | **採用** | 這兩個測試檔要 spawn 大量真實 git，Windows 啟動慢，預設 `testTimeout` 10 秒（`vitest.config.ts:53`）會讓單一測試逾時；本 fork 以 Windows 為主要環境，直接相關。原 diff 對 fork 的這兩個檔案能乾淨套用（`git apply --check` 通過），所以以原 diff 套用（`git apply`），只加 `describe` 層 `timeout`：win32 30 秒、其他 10 秒，沒有碰全域 timeout。 |
+| #2176（merged，release bot，10 檔 +29/-47） | 略過 | 只刪 `.changeset/*.md` 並改版本，是上游發版機制。 |
+| #2177（closed 未合併，Dependabot，`pnpm-lock.yaml` +67/-67） | 略過 | typescript-eslint 8.72.0 的 lockfile-only 版本；被 #2179 取代，同依賴新鮮度流程。 |
+| #2179（merged，`flake.nix`、`pnpm-lock.yaml`） | 略過 | 見上。 |
+| #2181、#2182（open，Dependabot，`@vitest/ui`、`vitest` 4.1.12→5.0.3） | 略過（沿用既有裁決） | 2026-10-30 依賴表（`docs/DECISIONS.md` 664、667 行）已延後 vitest 5：需要 Node 22+ 與 `@types/node` 政策變更，且 `@vitest/ui` 必須同版；上游這兩個 Dependabot PR 是 5.0.3，非新資訊。 |
+| #2183（merged，website 依賴群組） | 略過 | 本 fork 不部署上游網站。 |
+| #2188（open，Dependabot，typescript-eslint 8.72.0→8.72.1，lockfile-only） | 略過 | 同 #2179。 |
+| #2189（open，Dependabot，website 依賴群組 3 項） | 略過 | 同 #2183。 |
+| #2192（open，head `3c462b3`，`flake.nix`＋`pnpm-lock.yaml`＋`pnpm-workspace.yaml` +21/-8，`clay-good`） | defer（附觸發條件） | 針對 GHSA-g3hv-75wg-m249（minimatch <11.0.1，globParts 放大 DoS，severity medium；已以 `gh api advisories/GHSA-g3hv-75wg-m249` 確認）用 pnpm override 強推 `minimatch>=11.0.1`。diff 掃描 0 命中。上游自己註明只在開發依賴（eslint、`@eslint/config-array`、`@typescript-eslint/typescript-estree` 都 pin `^10.x`），不進發布的 CLI。本 fork 的 `pnpm-lock.yaml` 也是 `minimatch@10.2.6`（1068、2290 行），同樣只經 dev 依賴；`gh api repos/SanHsien/OpenSpec/dependabot/alerts?state=open` 回 0 筆。強推跨大版本的 override 會讓 eslint 系列用不在其 peer 範圍的 minimatch，須實際跑 lint 才知道，而且沒有任何告警。觸發條件：本 fork 出現 minimatch 的 Dependabot 告警，或 eslint 系列放寬到 `>=11`。釘入 `monitored`（`pr#2192`）。 |
+
+### Issue 逐筆
+
+| Issue | 結論 | 理由與本 fork 對照 |
+| --- | --- | --- |
+| #2175 | 跳過 | 功能提案：把開發團隊／組織偏好納入 `tasks.md` 產生，屬產品方向，無缺陷、無 Windows／CJK 面向；`config.yaml` 的 `rules:` 已是現有擴充點。 |
+| #2180 | 跳過（觀察） | Pi 同時掃描 `.pi/skills/` 與 `.agents/skills/`，兩份同名 skill 造成啟動警告；回報者自己寫「功能上無害」。fork 有 `pi.ts` 與 `oh-my-pi.ts` adapter，但這是上游 delivery 設計取捨，沒有 fork 缺陷。重看條件：fork 使用者回報或上游改 delivery 模式。 |
+| #2184、#2185、#2186 | 不適用 | 都是 `openspec version --check`。`grep -rn "version --check" src` 在 fork 無命中，`src/commands/` 也沒有 `version` 命令檔。 |
+| #2187 | 略過 | 社群 schema 登記（specwright），上游社群文件。 |
+| #2190 | 略過 | Showcase（herdr-openspec），上游社群宣傳。 |
+| #2191 | 跳過 | 功能請求：opt-in DFMEA 支援，涉及 design／implementation／verification 三個階段，產品範圍擴張。 |
+| #2193（open，2026-11-02 開，0 則留言） | 跳過 | 功能提案：monorepo 支援（每個 app 一份 `apps/<app>/openspec/` 或根目錄 `openspec/<app>/`），無缺陷、無 Windows／CJK 面向。本 fork 已有 root 選擇機制（`src/core/openspec-root.ts`、`root-selection.ts`），上游 PR #1992（root 連接，見 `docs/DECISIONS.md` 332 行）已列「跟隨上游」；`docs/existing-projects.md:115` 記載現行建議是單一根目錄 `openspec/`。重看條件：上游採用提案或 #1992 合併發行。 |
+
+### 已 monitored 的 5 筆 PR（判準八，取目前 head）
+
+全部是 fast-forward（`compare` 舊 head...新 head 為 `ahead`、`behind_by` 0，沒有 force-push）；5 個目前 diff 都對 `\S\s{40,}\S`、`eval(`、`new Function(`、`globalThis`、200 字元以上 base64 形字串掃描，0 命中。
+
+| PR | 舊 head → 新 head | 新增內容 | 結論 |
+| --- | --- | --- | --- |
+| #2168（open） | `c979153` → `8b9bb13`（2 commits，7 檔） | 兩個 skills 修正：delta 路徑以「回報的 `specs/` 下路徑」計入、sync 清單只保留 `specs/` 下回報的路徑；改 3 個 workflow 模板與 `skill-templates-parity.test.ts`。 | 已自行修補維持。fork 的 archive／bulk-archive／sync 模板依 `outputPath` 位於 `specs/` 判定，與上游收斂後的規則一致；重新釘住 `8b9bb13`。 |
+| #2170（open） | `ec43969` → `ae501b2`（1 commit，5 檔） | 「修復後告警又回來時再問一次」，`apply-change.ts` +2/-2 與測試。 | 已自行修補維持。fork 的 `apply-change.ts` 已有「任務迴圈中新告警暫停」，由 `test/core/templates/apply-warnings-gate.test.ts` 釘住；重新釘住 `ae501b2`。 |
+| #2171（open） | `61fde7c` → `74eb93f`（9 commits，6 檔） | 與 #2170 合併，加 `all_done` 前先查告警、完成時重列未解告警、修復後重跑 apply instructions；`apply-change.ts` +4/-1 與 `apply-warnings-gate.test.ts` +77。 | 已自行修補維持。#2171 原本的重點（blocked 狀態只從 `missingPrerequisites` 選提示）fork 已有 `test/core/templates/apply-blocked-selection.test.ts`；這次新增的是 #2170 的變體，重新釘住 `74eb93f`。 |
+| #2172（**merged**，`05cc75f`） | `945a4b3` → `b008daa`（2 commits，1 檔） | 只加測試跳過條件，見 commit 對帳。 | defer 不變；狀態改 `merged`。釘住 `b008daa`／`closed`（檢查器以 `closed` 標示非 open）。 |
+| #2174（open） | `634908e` → `1da8a50`（11 commits，13 檔） | 上游把規則改成「依輸出路徑找 delta spec，不看 `specs` artifact id」，合併了 #2168，並在最後一個 commit `1da8a50` 把「遇到擺錯位置的 delta」改交給 `openspec validate`，不在 skill 內停止。 | 已自行修補維持，但**與上游方向分歧**：fork 的 `archive-change.ts:101`、`bulk-archive-change.ts:81` 仍是「stray file 含 delta 標頭就停止並回報路徑，無標頭的筆記檔排除」。fork 的做法在 agent 指示層擋得更早，不依賴使用者先跑 validate；沒有理由跟上游退回。重看條件：上游合併 #2174 且 `validate` 對 stray delta 的檢查落地。重新釘住 `1da8a50`。 |
+
+### 程式變更
+
+只有 `test/commands/store-git.test.ts`、`test/commands/store-remote.test.ts` 兩個測試檔各加 5 行（#2178）；沒有改 `src/`、模板、manifest、workflow 或檢查器。
+
+### 水位
+
+Commit 水位 `6d04a1b`→`27c0515724decc633818c735ee596481eec78a8b`；PR 水位 `#2174`→`#2192`；issue 水位 `#2173`→`#2193`（審查中新開的 #2193 一併裁決）；日期 2026-11-02。`monitored` 現為 7 筆：#2168、#2169、#2170、#2171、#2172、#2174 重新釘住目前 head，新增 #2192。水位只表示已讀取並有結論，不表示延後項目已處理。
