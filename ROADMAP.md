@@ -4,7 +4,7 @@
 > 現況段的本機與上游審查是 2026-11-02 依 `main`／HEAD `893344656f82561345aaed7c587582e706c62975` 的快照；GitHub CI／告警數字仍是 2026-10-29 的舊快照，未在本輪重驗。
 
 ## 現況
-OpenSpec 提供 AI 開發的規格、提案、實作與歸檔工作流，本線重點是 Windows 原生維護（[README](README.md)、[FORK](FORK.md)）。2026-10-30 在 `main`／HEAD `3f260c7fcaa432ecd65e51bfd42ab0895cb045d2` 接續完成 9 個 OUTDATED 套件的延後裁決與上游 PR／issue 水位推進（見 [裁決記錄](docs/DECISIONS.md#2026-10-30補審上游-5-筆-pr-與-6-筆-issue)）；同日完成 sync／archive 的 delta 集合與寫入防護（支援自訂 id、合法 spec.md 集合、agent 指示層的 containment 要求）與 apply 的告警及 blocked artifact 選擇（warnings 暫停與 missingPrerequisites 依賴集合限制），同步生成鏡像與 parity hashes，通過全套單元測試與 Windows 本機閘門。2026-11-02 清掉上游積壓（commit 到 `27c0515`、PR 到 #2192、issue 到 #2193，採用 #2178 的 Windows 測試逾時，見 [裁決記錄](docs/DECISIONS.md#2026-11-02上游積壓審查commit-6d04a1b27c0515pr-21762192issue-21752191monitored-漂移)）。Node 支援政策仍待維護者決定（上游已於 `33c6f93` 合併改 `>=22.12.0`）。2026-10-29 的 CI、CodeQL、Security、Upstream Check 成功與告警為 0 僅為歷史快照。
+OpenSpec 提供 AI 開發的規格、提案、實作與歸檔工作流，本線重點是 Windows 原生維護（[README](README.md)、[FORK](FORK.md)）。2026-10-30 在 `main`／HEAD `3f260c7fcaa432ecd65e51bfd42ab0895cb045d2` 接續完成 9 個 OUTDATED 套件的延後裁決與上游 PR／issue 水位推進（見 [裁決記錄](docs/DECISIONS.md#2026-10-30補審上游-5-筆-pr-與-6-筆-issue)）；同日完成 sync／archive 的 delta 集合與寫入防護（支援自訂 id、合法 spec.md 集合、agent 指示層的 containment 要求）與 apply 的告警及 blocked artifact 選擇（warnings 暫停與 missingPrerequisites 依賴集合限制），同步生成鏡像與 parity hashes，通過全套單元測試與 Windows 本機閘門。2026-11-02 清掉上游積壓（commit 到 `27c0515`、PR 到 #2192、issue 到 #2193，採用 #2178 的 Windows 測試逾時，見 [裁決記錄](docs/DECISIONS.md#2026-11-02上游積壓審查commit-6d04a1b27c0515pr-21762192issue-21752193monitored-漂移)）。Node 支援政策仍待維護者決定（上游已於 `33c6f93` 合併改 `>=22.12.0`）。2026-10-29 的 CI、CodeQL、Security、Upstream Check 成功與告警為 0 僅為歷史快照。
 
 ## 近期：可以直接動手
 | 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |

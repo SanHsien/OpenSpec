@@ -717,7 +717,7 @@ Commit 不變（`6d04a1b`）；PR `#2154`→`#2161`；Issue 不變（`#2157`）�
 - 修改後 `pwsh -NoProfile -File tools\dev_check.ps1`：exit 0，結尾 `WINDOWS DEV CHECK GREEN`；全套 vitest 167 檔通過（1 檔略過，4627 tests）；monitored 6 筆 head／狀態均未漂移。
 - 本輪改了 4 個 workflow 模板（apply、archive、bulk-archive、sync）、4 個生成的 `skills/openspec-*/SKILL.md` 與 parity hash，新增 4 個 `test/core/templates/*.test.ts`；修補位於 agent 指示層，CLI 執行期的 realpath 檢查（`src/core/archive.ts`、`src/core/specs-apply.ts`）本輪未改。
 
-## 2026-11-02：上游積壓審查（commit 6d04a1b..27c0515、PR #2176–#2192、issue #2175–#2191、monitored 漂移）
+## 2026-11-02：上游積壓審查（commit 6d04a1b..27c0515、PR #2176–#2192、issue #2175–#2193、monitored 漂移）
 
 ### 起因
 
@@ -796,4 +796,4 @@ Commit 不變（`6d04a1b`）；PR `#2154`→`#2161`；Issue 不變（`#2157`）�
 
 ### 水位
 
-Commit 水位 `6d04a1b`→`27c0515724decc633818c735ee596481eec78a8b`；PR 水位 `#2174`→`#2192`；issue 水位 `#2173`→`#2193`（審查中新開的 #2193 一併裁決）；日期 2026-11-02。`monitored` 現為 7 筆：#2168、#2169、#2170、#2171、#2172、#2174 重新釘住目前 head，新增 #2192。水位只表示已讀取並有結論，不表示延後項目已處理。
+Commit 水位 `6d04a1b`→`27c0515724decc633818c735ee596481eec78a8b`；PR 水位 `#2174`→`#2192`；issue 水位 `#2173`→`#2193`（審查中新開的 #2193 一併裁決）；日期 2026-11-02。`monitored` 現為 7 筆：#2168、#2170、#2171、#2172、#2174 重新釘住目前 head，#2169 維持原釘（`18e6bc8`，closed），新增 #2192。水位只表示已讀取並有結論，不表示延後項目已處理。
