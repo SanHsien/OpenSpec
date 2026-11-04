@@ -797,3 +797,37 @@ Commit 不變（`6d04a1b`）；PR `#2154`→`#2161`；Issue 不變（`#2157`）�
 ### 水位
 
 Commit 水位 `6d04a1b`→`27c0515724decc633818c735ee596481eec78a8b`；PR 水位 `#2174`→`#2192`；issue 水位 `#2173`→`#2193`（審查中新開的 #2193 一併裁決）；日期 2026-11-02。`monitored` 現為 7 筆：#2168、#2170、#2171、#2172、#2174 重新釘住目前 head，#2169 維持原釘（`18e6bc8`，closed），新增 #2192。水位只表示已讀取並有結論，不表示延後項目已處理。
+
+## 2026-11-04：上游增量審查（commit 27c0515..2bd5bc3、PR #2194、issue #2195、monitored 漂移）
+
+### 起因
+
+`Upstream check` 在 2026-11-02 08:52Z 的排程轉紅（10-28 手動執行是綠）。工作流程本身沒壞：日誌顯示檢查器正常執行並以 `--strict` exit 1，原因是當時有 18 個 commit、10 個 PR、8 個 issue 與 5 個 monitored 漂移未審。該批已在同日 `4d680ab5`／`5e27c6d9` 審完，但排程之後沒有再跑，所以最近一次結果仍是紅。審完後上游又前進，本輪處理新增的部分。
+
+### 四個面向
+
+| 面向 | 查法 | 結果 |
+| --- | --- | --- |
+| Commit | `git fetch upstream main`，`27c0515..upstream/main` | 1 筆：`2bd5bc3`（#2192 的 squash） |
+| PR | 檢查器與 `gh pr view` | 新 1 筆：#2194 |
+| Issue | 檢查器與 `gh issue view` | 新 1 筆：#2195 |
+| Monitored | 檢查器 | `pr#2170` open→closed、`pr#2192` open→closed（已合併，head 不變） |
+
+### 逐筆裁決（採用 0、略過 3）
+
+| 上游 | 結論 | 證據與觸發條件 |
+| --- | --- | --- |
+| `2bd5bc3`／#2192（merged，`flake.nix`＋`pnpm-lock.yaml`＋`pnpm-workspace.yaml`） | 略過（維持 11-02 的 defer 與觸發條件） | 合併後內容與 11-02 讀過的 head `3c462b3` 相同，沒有新資訊。`gh api repos/SanHsien/OpenSpec/dependabot/alerts?state=all` 對 minimatch 回 0 筆（含已關閉），fork 的 `pnpm-lock.yaml` 仍是 `minimatch@10.2.6`，只經 eslint 開發依賴，不進發布的 CLI；觸發條件（出現 minimatch 告警，或 eslint 系列放寬到 `>=11`）未成立。上游的 `flake.nix` hash 是它自己鎖檔的 hash，不能抄。`pr#2192` 重新釘為 closed。 |
+| #2194（open，`flake.nix`＋`package.json`＋`pnpm-lock.yaml`，取代 #2148／#2181／#2182／#2188） | 略過（沿用 2026-10-30 依賴表） | 核心是 vitest／`@vitest/ui` 升 5.0.5 並把 `@types/node` 升到 `^22.12.0`，前提是最低 Node 改 22；fork 的 `package.json` `engines` 仍是 `>=20.19.0`，Node 最低版本是 ROADMAP 待決事項。與 `docs/DECISIONS.md` 663–667 行的 `@types/node`、`@vitest/ui`、`vitest` 重訪條件相同，未成立。其餘兩個 patch 升級（typescript-eslint、`@inquirer/core`）由 fork 自己的依賴新鮮度流程處理，鎖檔與 `flake.nix` 基底不同，不抄。 |
+| issue #2195（open，要求對「未識別的 delta 區段」加 opt-in 嚴格模式使 `validate`／`archive` 失敗） | 略過 | 在 fork 的 `dist` 以暫存目錄重現：`ADDED`＋`DEPRECATED` 兩區段的 change，`validate --all` 與加 `--strict` 都 exit 0，連警告也沒有。上游多出的警告來自 #2054（`1bce87f8`），已在 2026-10-26 判「archive 行為變更」延後；#2195 是在那個警告之上要求加嚴，屬功能擴張，前提尚未採用。重訪條件：採用 #2054，或維護者要把 `validate` 加嚴（同 #2079 的重看條件）。 |
+
+### Monitored 重新釘住
+
+| 項目 | 變化 | 結論 |
+| --- | --- | --- |
+| #2170 | head `ae501b2`→`7f66373`，open→closed | 作者承認「由 CLI 擋 ready」的做法方向不對，關閉並併入 #2134（讓 beta skills 在動工前先判斷要不要寫 spec）。fork 在 `apply-change.ts` 共用模板的 `warnings` 暫停門檻（`test/core/templates/apply-warnings-gate.test.ts`）維持不動；重新釘為 closed。#2134 另列待讀，若其合併再審。 |
+| #2192 | state open→closed | 見上列，head `3c462b3` 不變。 |
+
+### 水位
+
+Commit 水位 `27c0515`→`2bd5bc3be964404657439f538857fcdf550f7398`；PR 水位 `#2192`→`#2194`；issue 水位 `#2193`→`#2195`；日期 2026-11-04。`monitored` 維持 7 筆，僅更新 #2170、#2192 的 head 與 state。水位只表示已讀取並有結論，不表示延後項目已處理。
