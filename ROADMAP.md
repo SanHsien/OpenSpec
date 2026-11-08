@@ -1,20 +1,18 @@
 # 路線圖
 
 > 本 repo 後續工作的單一真相源。做完一項，就在同一個 commit 刪掉那一列；新工作只加在這裡。
-> 現況段的本機與上游審查是 2026-11-02 依 `main`／HEAD `893344656f82561345aaed7c587582e706c62975` 的快照；GitHub CI／告警數字仍是 2026-10-29 的舊快照，未在本輪重驗。
+> 現況段的本機與上游審查是 2026-11-08 快照；Dependabot 與 Code Scanning 開啟告警為 0。
 
 ## 現況
-OpenSpec 提供 AI 開發的規格、提案、實作與歸檔工作流，本線重點是 Windows 原生維護（[README](README.md)、[FORK](FORK.md)）。2026-10-30 在 `main`／HEAD `3f260c7fcaa432ecd65e51bfd42ab0895cb045d2` 接續完成 9 個 OUTDATED 套件的延後裁決與上游 PR／issue 水位推進（見 [裁決記錄](docs/DECISIONS.md#2026-10-30補審上游-5-筆-pr-與-6-筆-issue)）；同日完成 sync／archive 的 delta 集合與寫入防護（支援自訂 id、合法 spec.md 集合、agent 指示層的 containment 要求）與 apply 的告警及 blocked artifact 選擇（warnings 暫停與 missingPrerequisites 依賴集合限制），同步生成鏡像與 parity hashes，通過全套單元測試與 Windows 本機閘門。2026-11-02 清掉上游積壓（commit 到 `27c0515`、PR 到 #2192、issue 到 #2193，採用 #2178 的 Windows 測試逾時，見 [裁決記錄](docs/DECISIONS.md#2026-11-02上游積壓審查commit-6d04a1b27c0515pr-21762192issue-21752193monitored-漂移)）。Node 支援政策仍待維護者決定（上游已於 `33c6f93` 合併改 `>=22.12.0`）。2026-10-29 的 CI、CodeQL、Security、Upstream Check 成功與告警為 0 僅為歷史快照。
+OpenSpec 提供 AI 開發的規格、提案、實作與歸檔工作流，本線重點是 Windows 原生維護（[README](README.md)、[FORK](FORK.md)）。2026-10-30 在 `main`／HEAD `3f260c7fcaa432ecd65e51bfd42ab0895cb045d2` 接續完成 9 個 OUTDATED 套件的延後裁決與上游 PR／issue 水位推進（見 [裁決記錄](docs/DECISIONS.md#2026-10-30補審上游-5-筆-pr-與-6-筆-issue)）；同日完成 sync／archive 的 delta 集合與寫入防護（支援自訂 id、合法 spec.md 集合、agent 指示層的 containment 要求）與 apply 的告警及 blocked artifact 選擇（warnings 暫停與 missingPrerequisites 依賴集合限制），同步生成鏡像與 parity hashes，通過全套單元測試與 Windows 本機閘門。2026-11-02 清掉上游積壓（commit 到 `27c0515`、PR 到 #2192、issue 到 #2193，採用 #2178 的 Windows 測試逾時，見 [裁決記錄](docs/DECISIONS.md#2026-11-02上游積壓審查commit-6d04a1b27c0515pr-21762192issue-21752193monitored-漂移)）。2026-11-04 完成增量審查至 `2bd5bc3`／PR #2194／issue #2195。2026-11-08 完成 Node 最低支援版本裁決（維持 `>=20.19.0`，條件成立前不跟進破壞性 engines 變更，見 [裁決記錄](docs/DECISIONS.md#2026-11-08決定-node-最低支援版本與遷移條件)）；同日完成上游增量審查至 `0fa4a97`／PR #2213／issue #2216（見 [裁決記錄](docs/DECISIONS.md#2026-11-08上游增量審查commit-2bd5bc30fa4a97pr-21982213issue-21992216monitored-查證)）；`gh` 實查 Dependabot 與 Code Scanning 開啟告警為 0 筆。
 
 ## 近期：可以直接動手
-| 項目 | 為什麼 | 驗收方式 | 建議執行者 | 證據 |
-| --- | --- | --- | --- | --- |
-| 決定 Node 最低支援版本 | 提高 engines 是破壞性支援政策，不能當普通依賴補丁 | 維護者明確決定是否放棄 Node 20，列出需要保留的安裝族群及遷移條件；未決定前維持 engines | 維護者 | docs/DECISIONS.md:618；上游 PR #2159（已合併為 `33c6f93`） |
+目前無直接可動手項目（「決定 Node 最低支援版本」已於 2026-11-08 裁決維持 `>=20.19.0` 並轉入中期追蹤，見 [裁決記錄](docs/DECISIONS.md#2026-11-08決定-node-最低支援版本與遷移條件)）。
 
 ## 中期：等條件成立再做
 | 項目 | 觸發條件 | 驗收方式 | 建議執行者 | 證據 |
 | --- | --- | --- | --- | --- |
-| 落實 Node 支援政策遷移 | 維護者核准，或 runtime 安全修補只支援較新 Node | engines、CI／Security 釘版、安裝文件與 chalk ignore 一致；Windows 安裝、`pnpm test`、型別檢查、lint、build 通過，不帶入未授權發布流程 | Codex | docs/DECISIONS.md:618 |
+| 落實 Node 支援政策遷移 | 執行期依賴的 engines 排除 20.19.0，或出現只在 Node 22+ 修補的 CVE | engines、CI／Security 釘版、安裝文件與 chalk ignore 一致；Windows 安裝、`pnpm test`、型別檢查、lint、build 通過，不帶入未授權發布流程 | Codex | docs/DECISIONS.md:618；docs/DECISIONS.md「2026-11-08：決定 Node 最低支援版本與遷移條件」 |
 | 獨立規劃 update 重構與 beta skills | 維護者要處理 update 流程，且完成 fork 行為差異盤點 | 對 update、dry-run、verify、模板輸出建立前後對照，保留 Windows CRLF 與路徑邊界回歸，受影響 CLI 與全套測試通過 | Claude Opus | docs/DECISIONS.md:557、632 |
 | 重評 symlink 與 REMOVED／RENAMED 語意 | 維護者明確要支援 symlink 目錄，或決定採用上游 #1962 | 專案外目標仍遭拒，合法目標有測試；verify 的刪除／改名案例按批准規格判級，不放寬 confinement 讓測試過關 | Claude Opus | docs/DECISIONS.md:546、555 |
 | 重評 ZDOTDIR completion 修補 | 有 ZDOTDIR 使用需求、安排 POSIX 驗收，或要跟進已合併的上游 `05cc75f` | 先定相對 ZDOTDIR 政策，再測絕對／空白／未設定值、安裝與解除安裝往返、舊 home 區塊清理、提示一致及真實 zsh 載入；Windows gate 不代替 POSIX smoke | Codex | docs/DECISIONS.md「2026-10-30：補審上游」；PR #2172（已合併為 `05cc75f`，pinned 在 `b008daa`） |

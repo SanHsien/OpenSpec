@@ -615,7 +615,7 @@ Commit `9111a76`→`6d04a1b`；PR `#2064`→`#2142`；Issue `#2059`→`#2147`。
 | 上游 | 結論 | 證據與觸發條件 |
 | --- | --- | --- |
 | #2158（head `6f2ac6ae2e6e43f0809387809245196a850ed3e7`；`flake.nix` +1/-1、`package.json` +1/-1、`pnpm-lock.yaml` +268/-218） | 跳過 | 上游動機是取代 Dependabot #2148／#2150／#2154，並避開 vite 8.3.1 的 GHSA-587h-7wmj-h5pm（PR 內文只寫 8.3.0–8.3.2；`gh api advisories/GHSA-587h-7wmj-h5pm` 另列 vite ≤6.4.3、7.0.0–7.3.6（7.3.7 為 7.x 修補版）、數個 8.x 區間，以及 launch-editor ≤2.14.1）。本 fork 在 `package.json:71` 是 `"vite": "^7.3.7"`，`pnpm-lock.yaml:1272` 是 `vite@7.3.7`，正是 7.x 的修補版、不在受影響範圍，`pnpm-lock.yaml` 的 `launch-editor@2.14.2` 也在修補版之上：`pnpm audit --audit-level low` 回「No known vulnerabilities found」，`gh api repos/SanHsien/OpenSpec/dependabot/alerts` open 為 0。lockfile 與 `flake.nix` 的 hash 也不能抄：本 fork 鎖在 `eslint@10.9.1`（`pnpm-lock.yaml:883`）、`@inquirer/core@11.2.1`（`package.json:75`，鎖檔 391 行），上游改的是 10.12→10.13、12.0.4→12.0.5，基底不同；`flake.nix` 的 `pnpmDeps.hash` 是上游那份鎖檔的 hash，本 fork 由 `scripts/update-flake.sh` 依自己的鎖檔算。沿用 2026-10-26 第二輪對 #2154 的結論（固定 vite 7.3、vitest 4.1，`7d38a769`）。重訪條件：`pnpm audit` 或 Dependabot 對 vite 7.x 出現 7.x 修不了的警示，或 vitest 5 與 vite 8 的 peer 範圍相容且全套測試通過。 |
-| #2159（head `18667091ee20c58cd145194c994ae307a6937fa4`；16 檔 +33/-30） | 延後（不是缺陷，是破壞性的支援政策） | 把 `engines` 從 `>=20.19.0` 改 `>=22.12.0`，並把 CI 的 Node 釘版、文件、Dependabot 的 chalk 大版本 ignore 一併改。本 fork 對應處：`package.json:59-61` `engines` 是 `>=20.19.0`；`.github/workflows/ci.yml:85,141,175` 與 `security.yml:61,117` 釘 `20.19.0`；`.github/dependabot.yml:36` 的 chalk ignore 註解；`docs/troubleshooting.md:20-28`、`install.md:25`、`README.en.md:125`、`docs-lab/start/installation.md:8,36` 寫 20.19.0。實測本 fork 鎖檔 179 筆 `engines`，排除 Node 20.19.0 的只有 17 筆，全是開發期工具（`@changesets/*` 與 `@pnpm/deps.graph-sequencer`，`package.json:63-64` 的 devDependencies，`ci.yml:304` 用 Node 24 跑），執行期 `dependencies` 沒有任何一筆要求 Node 22，所以沒有「不升就壞」的缺陷。Node 20 已於 2026-04-30 終止維護是事實，但提高下限會讓 Node 20 的 npm 使用者無法安裝，應由維護者決定。重訪條件：維護者決定放棄 Node 20，或執行期依賴出現只在 Node 22 以上發佈的安全修正（`pnpm audit`／Dependabot）。屆時移植做法：改 `engines`、上列 5 處 `node-version`、文件字串與 chalk ignore，不抄上游 matrix 與 `binaries.yml`。 |
+| #2159（head `18667091ee20c58cd145194c994ae307a6937fa4`；16 檔 +33/-30） | 延後（舊裁決，已由 2026-11-08 段取代；不是缺陷，是破壞性的支援政策） | 【舊裁決，已由 2026-11-08 段「決定 Node 最低支援版本與遷移條件」取代】把 `engines` 從 `>=20.19.0` 改 `>=22.12.0`，並把 CI 的 Node 釘版、文件、Dependabot 的 chalk 大版本 ignore 一併改。本 fork 對應處：`package.json:59-61` `engines` 是 `>=20.19.0`；`.github/workflows/ci.yml:85,141,175` 與 `security.yml:61,117` 釘 `20.19.0`；`.github/dependabot.yml:36` 的 chalk ignore 註解；`docs/troubleshooting.md:20-28`、`install.md:25`、`README.en.md:125`、`docs-lab/start/installation.md:8,36` 寫 20.19.0。實測本 fork 鎖檔 179 筆 `engines`，排除 Node 20.19.0 的只有 17 筆，全是開發期工具（`@changesets/*` 與 `@pnpm/deps.graph-sequencer`，`package.json:63-64` 的 devDependencies，`ci.yml:304` 用 Node 24 跑），執行期 `dependencies` 沒有任何一筆要求 Node 22，所以沒有「不升就壞」的缺陷。Node 20 已於 2026-04-30 終止維護是事實，但提高下限會讓 Node 20 的 npm 使用者無法安裝，應由維護者決定。舊重訪條件（已過期）：維護者決定放棄 Node 20，或執行期依賴出現只在 Node 22 以上發佈的安全修正（`pnpm audit`／Dependabot）。屆時移植做法：改 `engines`、上列 5 處 `node-version`、文件字串與 chalk ignore，不抄上游 matrix 與 `binaries.yml`。 |
 | #2160（head `ed7a70b527c63cf6c7b85808e0b2360233445837`；11 檔 +162/-79） | 不適用 | 改的是 #2137 獨立執行檔的安裝器與發布：`scripts/binary/install.sh`、`install.ps1`、`.github/workflows/binaries.yml`、`test/binary-installer.test.ts`。本 fork 這四個檔案都不存在（#2137 於 2026-10-26 延後）；`grep -rn "install.sh\|install.ps1\|openspec.dev/cli\|SHA256SUMS"`（md／ts／yml／json，排除 node_modules）0 命中。README／`install.md`／`docs-lab/start/installation.md` 被改的行是 #2137 才加的獨立執行檔說明，本 fork 沒有（`docs-lab/start/installation.md:8` 仍是「OpenSpec is a Node.js CLI」）。新的安裝 URL `openspec.dev/cli/...` 由上游網域提供，本 fork 也不該指過去。重訪條件：決定採用 #2137。 |
 | #2161（head `0ada21ed3a07034042cf1a707eaac8ba33f742c0`；9 檔 +13/-8，含 4 個圖檔搬移） | 不適用 | 修的是上游 `openspec.dev` 的 routing Worker 把 `/docs/*` 導到文件站、根路徑圖示被導去 landing 站的問題。本 fork 的 `website/cloudflare/router/wrangler.jsonc` 路由全寫 `zone_name: "openspec.dev"`（第 7–11 行，是上游網域），`.github/` 下沒有任何 wrangler／cloudflare／pages deploy（`grep -rliE "wrangler\|cloudflare\|pages deploy" .github` 0 檔），`security.yml:93-99` 也寫明 website 不在 CI 安裝或建置，所以缺陷不存在於本 fork 可觸及的任何部署。PR 還建立在 #2142（pixel-O favicon，2026-10-26 略過）之上：本 fork 是 `website/app/icon.svg`，沒有上游現有的 `app/icon1.png`、`icon2.png`、`apple-icon.png`。重訪條件：本 fork 把文件站部署到自己的網域與路徑前綴。 |
 
@@ -831,3 +831,88 @@ Commit 水位 `6d04a1b`→`27c0515724decc633818c735ee596481eec78a8b`；PR 水位
 ### 水位
 
 Commit 水位 `27c0515`→`2bd5bc3be964404657439f538857fcdf550f7398`；PR 水位 `#2192`→`#2194`；issue 水位 `#2193`→`#2195`；日期 2026-11-04。`monitored` 維持 7 筆，僅更新 #2170、#2192 的 head 與 state。水位只表示已讀取並有結論，不表示延後項目已處理。
+
+
+## 2026-11-08：決定 Node 最低支援版本與遷移條件
+
+維護者已授權代為決定 ROADMAP 近期列「決定 Node 最低支援版本」。
+
+### 決策
+維持本 fork 之 Node 最低支援版本為 `>=20.19.0`，暫不跟進上游 `33c6f93` 放棄 Node 20，維持既有 `package.json` engines 宣告。
+
+### 依據與證據
+1. **執行期無相容性阻礙**：
+   以腳本實算 `pnpm-lock.yaml` 宣告，全鎖檔共有 181 筆 `engines` 宣告（全數包含 `node` 約束）。核心發行之 CLI 執行期 `dependencies` 無任何一筆排除 Node 20.19.0。其中 16 筆 `@inquirer/*` 套件（包含 `@inquirer/core`、`@inquirer/prompts` 等）宣告為 `'>=23.5.0 || ^22.13.0 || ^20.17.0'`，其 `^20.17.0` 條件涵蓋 `>=20.17.0 <21.0.0`，完全相容 Node 20.19.0。真正排除 Node 20.19.0 的僅有開發期工具（`devDependencies`），包括 17 筆發行工具 `@changesets/*`（條件 `^22.11 || ^24 || >=26`）以及 1 筆間接依賴 `@pnpm/deps.graph-sequencer@1100.0.1`（條件 `>=22.13`，由 `@changesets/cli` 引入），皆僅在 CI（以 Node 24 執行）或發行階段使用，不影響使用者以 Node 20.19.0 執行 OpenSpec CLI。
+2. **避免破壞既有安裝族群**：雖然 Node 20 LTS 於 2026-04-30 結束維護，但直接將 engines 調高至 `>=22.12.0` 屬重大破壞性政策變更，會使仍處於 Node 20 環境之 npm 使用者無法安裝，在無安全或功能缺陷之情境下不宜過早切斷支援。
+3. **安全警示查證無漏洞**：2026-11-08 實查 `gh api repos/SanHsien/OpenSpec/dependabot/alerts?state=open` 與 `gh api repos/SanHsien/OpenSpec/code-scanning/alerts?state=open`，開放告警皆為 0 筆（`[]`），無必須依靠 Node 22 以上版本修復之執行期安全警示。
+
+### 遷移與重訪條件
+當下列條件任一成立時，於中期追蹤列啟動「落實 Node 支援政策遷移」：
+1. 執行期依賴的 engines 排除 20.19.0；或
+2. 出現只在 Node 22+ 修補的 CVE。
+屆時之具體移植範圍維持既定計畫：同步修改 `package.json` engines、CI/Security workflow 釘版（5 處）、說明文件與 chalk ignore，不抄上游 matrix 與 binaries.yml。
+
+
+## 2026-11-08：上游增量審查（commit 2bd5bc3..0fa4a97、PR #2198–#2213、issue #2199–#2216、monitored 查證）
+
+### 起因
+
+`tools/check_upstream_updates.py --strict` 檢出上游 `main` 水位推進至 `0fa4a97`，落後 7 個 commit，另有 8 筆新 PR 與 11 筆新 Issue 待裁決。本輪逐筆審查並推進基線水位至 exit 0。
+
+### 四個面向
+
+| 面向 | 查法 | 結果 |
+| --- | --- | --- |
+| Commit | `git diff --shortstat 2bd5bc3 0fa4a97` | 7 筆（`3e4d5f0`、`631c911`、`ef170fa`、`c887ab0`、`83053dd`、`a1ae536`、`0fa4a97`），合計 24 檔 +1312/-365 |
+| PR | 檢查器與 `gh pr list` / `gh pr view` | 新 8 筆（#2198、#2203、#2204、#2205、#2206、#2207、#2212、#2213） |
+| Issue | 檢查器與 `gh issue list` | 新 11 筆（#2199–#2202、#2208–#2211、#2214–#2216） |
+| Monitored | 檢查器實查 | 7 筆釘住項目（pr#2168, pr#2169, pr#2170, pr#2171, pr#2172, pr#2174, pr#2192）head 與 state 全數未變，0 漂移 |
+
+### Commit 逐筆裁決（採用 0、略過 7）
+
+| 上游 Commit / PR | 結論 | 證據與觸發條件 |
+| --- | --- | --- |
+| `3e4d5f0`（#2194，3 檔，`flake.nix` +1/-1、`package.json` +3/-3、`pnpm-lock.yaml` +166/-205） | 略過（維持延後） | 整併 Dependabot 依賴更新並將 `@types/node` 提升至 22（因應上游 #2159 放棄 Node 20）。本 fork 經 2026-11-08 裁決維持 Node `>=20.19.0`，維持既有 `@types/node` 與 vitest 4.1.12，不跟進破壞性 engines 變更；其餘依賴由本 fork 自行管理。 |
+| `631c911`（#2189，2 檔，`website/package.json` +3/-3、`website/pnpm-lock.yaml` +80/-68） | 略過（跳過） | 更新文件站依賴（fumadocs-core/ui 16.17.9、`@types/node` 26.6.6）。本 fork 之 CI 與安全掃描明定排除 website（`security.yml:93-99`），未部署文件站，與核心 CLI 執行及測試完全無涉。 |
+| `ef170fa`（#2204，5 檔，`.changeset/version-check-ignores-telemetry.md` +5/-0、`openspec/specs/cli-version/spec.md` +17/-3、`src/cli/index.ts` +1/-1、`src/core/version-check.ts` +14/-6、`test/core/version-check.test.ts` +150/-0） | 略過（延後） | 使明確下達 `openspec version --check` 時即便遙測關閉仍執行版本檢查。本改動在上游 PR #2001（commit `56528ea`，`openspec version --check`）基礎上修復；本 fork 於 2026-09-30 裁決將 PR #2001 延後（見 391 行），無 `version` 指令、`checkForCliUpdate` 與 spec，現存之 `src/core/version-check.ts` 僅供 `openspec update` 被動檢查，而 `ef170fa` 明確規範被動檢查維持既有遙測閘門（`The passive check inside openspec update keeps every gate it had`），故改動與本 fork 現況衝突。重訪條件：決定重構本 fork 版本元資料或採用 PR #2001。 |
+| `c887ab0`（#2205，11 檔，`.changeset/closed-section-headings.md` +5/-0、`src/core/parsers/change-parser.ts` +3/-2、`src/core/parsers/markdown-parser.ts` +3/-2、`src/core/parsers/requirement-blocks.ts` +19/-8、`src/core/parsers/spec-structure.ts` +5/-3、`src/core/specs-apply.ts` +1/-1、`src/core/validation/purpose-placeholder.ts` +1/-1、`test/core/archive.test.ts` +29/-0、`test/core/parsers/closed-requirement-heading.test.ts` +14/-0、`test/core/parsers/closed-section-heading.test.ts` +157/-0、`test/core/parsers/markdown-parser.test.ts` +36/-0） | 略過（延後） | 支援區段標題帶結尾 `#`（ATX closing `#` runs）。改動涉及 6 個核心解析器檔案及大量測試；本 fork 之 markdown-parser 與 code-fence 具 Windows CRLF 專屬處理機制，直接套用有破壞換行邊界風險，且目前無此需求。重訪條件：本 fork 出現 closing `#` 需求且在 Windows 測試全綠下審慎移植。 |
+| `83053dd`（#2207，6 檔，`.changeset/unrecognized-delta-requirement-section.md` +5/-0、`src/core/parsers/requirement-blocks.ts` +34/-9、`src/core/specs-apply.ts` +12/-1、`src/core/validation/validator.ts` +5/-1、`test/cli-e2e/unrecognized-delta-section.test.ts` +79/-0、`test/core/parsers/orphaned-requirements.test.ts` +149/-1） | 略過（維持延後） | 落實 issue #2195，在 validate 時拒絕未識別的 delta requirement 區段。此行為建立在 #2054（已延後）之警告機制上，屬功能擴張；且 fork 在 agent 指示層已有更早之防護機制。重訪條件沿用 11-04 裁決：採用 #2054 或維護者明確指示加嚴 validate。 |
+| `a1ae536`（#2206，4 檔，`.changeset/standalone-version-check-releases.md` +5/-0、`docs-lab/reference/cli.md` +9/-9、`src/core/version-check.ts` +108/-37、`test/core/version-check.test.ts` +201/-0） | 略過（不適用） | 使獨立二進位檔之版本檢查僅抓取 GitHub releases 上帶有 SHA256SUMS 的已發行版本（關閉 #2185）。本 fork 未採用獨立執行檔機制（#2137 延後，無 `install.sh`/`install.ps1`），不發布獨立二進位檔，改動不適用。重訪條件：決定採用 #2137。 |
+| `0fa4a97`（#2212，6 檔，4 個 changeset 刪除各 5 行、`CHANGELOG.md` +12/-0、`package.json` +1/-1） | 略過（不適用） | 上游發行 bot 自動消耗 changeset 並將版本升至 0.16.1。本 fork 發布流程只在上游跑，不發布至 npm，不直接覆寫版本號與 changeset。 |
+
+### PR 逐筆裁決（採用 0、略過 8）
+
+| PR | 狀態 / Commit | 結論 | 證據與觸發條件 |
+| --- | --- | --- | --- |
+| #2198 | OPEN（head `c212581`） | 延後 | 允許 openspec-beta skills 取代專案本地 skills。屬 beta skills 體系改動，依賴上游 #2134 重構。維持 ROADMAP 中期「獨立規劃 update 重構與 beta skills」列之延後裁決。重訪條件：啟動 beta skills 重構規劃。 |
+| #2203 | OPEN（head `477537c`） | 略過 | 探討生命週期檢查與選擇性審查之非規範性文件提案，無產品程式碼改動。待上游形成正式規格或 PR 再議。 |
+| #2204 | MERGED（`ef170fa`） | 略過 | 遙測關閉時仍執行顯式版本檢查，見 commit `ef170fa` 裁決。 |
+| #2205 | MERGED（`c887ab0`） | 略過 | 允許標題結尾帶 `#`，見 commit `c887ab0` 裁決。 |
+| #2206 | MERGED（`a1ae536`） | 略過 | 獨立二進位版本檢查改查已附檔之 GitHub release，見 commit `a1ae536` 裁決。 |
+| #2207 | MERGED（`83053dd`） | 略過 | 拒絕未識別的 delta 區段，見 commit `83053dd` 及 issue #2195 裁決。 |
+| #2212 | MERGED（`0fa4a97`） | 略過 | 上游版本發布（0.16.1），見 commit `0fa4a97` 裁決。 |
+| #2213 | OPEN（head `43277f4`） | 延後 | 支援跨版本單次 update 升級。改動涉及 `update` 流程，本 fork 具差異維護邏輯。維持 ROADMAP 中期「獨立規劃 update 重構與 beta skills」列延後。重訪條件：啟動 update 重構。 |
+
+### Issue 逐筆裁決（採用 0、略過 11）
+
+| Issue | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2199 | OPEN | 略過 | 社群提案新增 Google EGM Schema，屬第三方社群擴充，不影響核心 CLI。 |
+| #2200 | OPEN | 略過 | 補充 RFC 2119 與 RFC 8174 關鍵字規範說明，屬文件細節，待上游落實 PR。 |
+| #2201 | OPEN | 略過 | 提議新增 `openspec drift` 指令檢測 git 與 active scope 差異。屬新功能建議，待上游實作評估。 |
+| #2202 | OPEN | 略過 | 建議新增 reject/abandon 狀態以區隔 archive。屬狀態機功能提案，待上游規格定案。 |
+| #2208 | OPEN | 略過 | 建議為 Windows 提供 winget 安裝管道。本 fork 走本機 npm/git 方式，待上游評估 winget 提報。 |
+| #2209 | OPEN | 略過 | 探討 skills 合併，與 #2134/#2198 關聯。維持延後。 |
+| #2210 | OPEN | 略過 | 俄語規範關鍵字本地化需求，不影響繁體中文與核心規格。 |
+| #2211 | OPEN | 略過 | `retire_capabilities` 中以 `<` 開頭的換行被誤計為未說明內容之邊界 bug。待上游 PR 修正後審查。 |
+| #2214 | OPEN | 略過 | Pi coding-agent 安裝時因 `--omit=dev` 導致 prepare 失敗。本 fork 不經由 Pi git 方式發布，不適用。 |
+| #2215 | OPEN | 略過 | 減少 task 與 template 間重複指令說明之提案。待上游重構 PR 再議。 |
+| #2216 | OPEN | 略過 | `validate <change> --strict` 未檢查 MODIFIED 需求長度導致 archive 階段才報錯之邊界問題。待上游修補。 |
+
+### Monitored 查證
+
+7 筆釘住項目（#2168, #2169, #2170, #2171, #2172, #2174, #2192）狀態與 commit head 完全一致，無任何漂移。
+
+### 水位
+
+Commit 水位 `2bd5bc3`→`0fa4a9705c20ef1c571fe3ded74435733e4b73a1`；PR 水位 `#2194`→`#2213`；Issue 水位 `#2195`→`#2216`；日期 `2026-11-08`。`monitored` 維持 7 筆原釘住狀態。水位只表示已讀取並有結論，不表示延後項目已處理。
