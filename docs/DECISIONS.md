@@ -936,19 +936,19 @@ Commit 水位 `2bd5bc3`→`0fa4a9705c20ef1c571fe3ded74435733e4b73a1`；PR 水位
 
 已讀 `9ca6b77` 與開啟中的 #2223、#2224 的完整 diff（`git show`／`gh pr diff`），並掃零寬與雙向控制字元、新增行內的 HTML 註解、`curl | sh`、`iex`、`dangerously`、`bypassPermissions` 與提示注入字句。結果：零寬字元只出現在程式碼的 BOM 跳脫正規式（`generated-fingerprint.ts` 與兩個測試檔，用來測 BOM 容忍）；HTML 註解只是 `<!-- OPENSPEC:START/END -->` 標記與測試資料；其餘特徵 0 筆。#2224 的 3 個檔案全是 `docs-lab/team-trial/` 新增文件。
 
-### Commit 逐筆裁決（採用 0、略過 5）
+### Commit 逐筆裁決（採用 0、部分採用 1、略過 4）
 
 | 上游 Commit / PR | 結論 | 證據與觸發條件 |
 | --- | --- | --- |
 | `61d872c`（#2222，2 檔，`.github/workflows/binaries.yml` +11/-0、`scripts/binary/install.ps1` +8/-3） | 略過（不適用） | 修獨立二進位安裝腳本在 Windows PowerShell 偵測不到 CPU 的問題。本 fork 沒有 `scripts/binary/install.ps1` 也沒有 `binaries.yml`（#2137 已延後），改動沒有落點。重訪條件：決定採用 #2137。 |
 | `a73eabb`（#2221，2 檔，`flake.nix` +1/-1、`pnpm-lock.yaml` +227/-190） | 略過 | 只動上游 lockfile 與 flake 雜湊，`package.json` 未變。本 fork 的 lockfile 與依賴由 `check_dependency_freshness.py` 與 2026-10-30、11-08 的逐項裁決自行管理，不照搬上游 lockfile。 |
 | `dd92f90`（#2219，2 檔，`website/package.json` +5/-5、`website/pnpm-lock.yaml` +313/-319） | 略過 | 文件站依賴更新；本 fork 的 CI 與安全掃描排除 website，理由同 11-08 對 `631c911` 的裁決。 |
-| `9ca6b77`（#2213，41 檔 +6955/-153：`src/core/update.ts` +195/-50、`legacy-cleanup.ts` +141/-13、新增 `released-output-sweep.ts`、`shared/command-reconcile.ts`、`shared/generated-fingerprint.ts`、4010 行的 `released-generated-fingerprints.ts`，另含 `.gitattributes` +8、`ci.yml` +36） | 略過（延後） | 讓 `openspec update` 能從任何舊版一次升級，並預告 command 檔在 2.0 移除。本 fork 的同名檔已大幅分歧：忽略 CR 後與上游 `0fa4a97` 版本相比，`update.ts` 有 569 行不同、`legacy-cleanup.ts` 285 行、`init.ts` 80 行、`migration.ts` 157 行、`tool-detection.ts` 90 行，直接移植等於重做 update 流程。判斷與 11-08 它仍開啟時相同，改變的只是它已合併為 `9ca6b77`（head `76a7009e`）。維持 ROADMAP 中期「獨立規劃 update 重構與 beta skills」列。重訪條件：啟動 update 重構，或有使用者從 0.12 後的舊版直接升級而失敗。 |
+| `9ca6b77`（#2213，41 檔 +6955/-153：`src/core/update.ts` +195/-50、`legacy-cleanup.ts` +141/-13、新增 `released-output-sweep.ts`、`shared/command-reconcile.ts`、`shared/generated-fingerprint.ts`、4010 行的 `released-generated-fingerprints.ts`，另含 `.gitattributes` +8、`ci.yml` +36） | 部分採用：command 刪除保護；其餘延後 | 讓 `openspec update` 能從任何舊版一次升級，並預告 command 檔在 2.0 移除。本 fork 的同名檔已大幅分歧：忽略 CR 後與上游 `0fa4a97` 版本相比，`update.ts` 有 569 行不同、`legacy-cleanup.ts` 285 行、`init.ts` 80 行、`migration.ts` 157 行、`tool-detection.ts` 90 行，直接移植等於重做 update 流程。判斷與 11-08 它仍開啟時相同，改變的只是它已合併為 `9ca6b77`（head `76a7009e`）。已採用的部分：1.17.0 changelog 記載的「切到 skills only 不再刪使用者改過的 command 檔」。fork 原本的 `removeCommandFiles`／`removeUnselectedCommandFiles` 無條件 unlink，會丟資料；現改為 `src/core/shared/command-removal.ts`，刪除前比對現行產出（忽略 CRLF 與 BOM），內容不同、為 symlink 或無法比對就保留並警告，不搬上游 4010 行 fingerprint 表，所以舊版產出的未改檔會被保守地保留而非刪除。`init.ts` 同路徑一併套用，測試見 `test/core/shared/command-removal.test.ts` 與 `test/core/update.test.ts`。其餘（一次升級、released-output 清掃、deprecation 提示）維持 ROADMAP 中期「獨立規劃 update 重構與 beta skills」列。重訪條件：啟動 update 重構，或有使用者從 0.12 後的舊版直接升級而失敗。 |
 | `579fcac`（#2225，5 檔，3 個 changeset 刪除各 5 行、`CHANGELOG.md` +12/-0、`package.json` +1/-1） | 略過（不適用） | 上游發行 bot 消耗 changeset 並升版到 1.17.0；本 fork 不發布、不覆寫版本號，理由同 11-08 對 `0fa4a97` 的裁決。 |
 
 ### 延後項重評：`ef170fa`（#2204）
 
-ROADMAP 與 11-08 裁決記載它延後到「決定重構本 fork 版本元資料或採用 PR #2001」。實查 `gh pr view 2001`：#2001 在 2026-09-29 已於上游合併（commit `56528ea`），不是新變化——09-30 裁決延後時對應的就是這個 commit。觸發條件指的是本 fork 自己決定採用，而 `src/` 內至今沒有 `checkForCliUpdate`，這次也沒有維護者決定採用，所以條件未成立，`ef170fa` 維持延後。順手更正：09-30 表格（本檔「PR #2001 … 跟隨上游（OPEN」那列）是當時的描述，上游狀態現為 MERGED，不改寫歷史。
+ROADMAP 與 11-08 裁決記載它延後到「決定重構本 fork 版本元資料或採用 PR #2001」。實查 `gh pr view 2001`：#2001 在 2026-09-29 已於上游合併（commit `56528ea`），不是新變化——09-30 裁決延後時對應的就是這個 commit。觸發條件指的是本 fork 自己決定採用，而 `src/` 內至今沒有 `checkForCliUpdate`，這次也沒有維護者決定採用，所以條件未成立，`ef170fa` 維持延後。順手更正：09-29 表格（本檔 `## 2026-09-29：採用上游 #2004` 下「PR #2001 … 跟隨上游（OPEN」那列）是當時的描述，上游狀態現為 MERGED，不改寫歷史。
 
 ### PR 逐筆裁決（採用 0、略過 8）
 

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { UpdateCommand, scanInstalledWorkflows } from '../../src/core/update.js';
 import { InitCommand } from '../../src/core/init.js';
+import { CommandAdapterRegistry, generateCommand } from '../../src/core/command-generation/index.js';
+import { getCommandContents } from '../../src/core/shared/skill-generation.js';
 import { getConfiguredToolsForProfileSync } from '../../src/core/profile-sync-drift.js';
 import { ALL_WORKFLOWS } from '../../src/core/profiles.js';
 import { FileSystemUtils } from '../../src/utils/file-system.js';
@@ -38,6 +40,12 @@ function setMockConfig(config: GlobalConfig) {
 
 function resetMockConfig() {
   mockState.config = { featureFlags: {}, profile: 'core', delivery: 'both' };
+}
+
+// Content OpenSpec itself would write for a Claude command file, so a test can
+// stand in for an unedited generated file (hand-written text counts as edited).
+function generatedClaudeCommand(workflow: string): string {
+  return generateCommand(getCommandContents([workflow])[0], CommandAdapterRegistry.get('claude')!).fileContent;
 }
 
 async function markCodexTarget(skillsDir: string): Promise<void> {
@@ -719,6 +727,21 @@ metadata:
       // delete it — otherwise the skip could never re-offer Codex later.
       expect(await FileSystemUtils.fileExists(globalPrompt)).toBe(true);
       expect(await fs.readFile(globalPrompt, 'utf-8')).toBe('legacy explore prompt');
+    });
+
+    it('keeps an edited command file when delivery switches to skills only', async () => {
+      setMockConfig({ featureFlags: {}, profile: 'core', delivery: 'both' });
+      await new InitCommand({ tools: 'claude', force: true }).execute(testDir);
+      const exploreCmd = path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md');
+      const proposeCmd = path.join(testDir, '.claude', 'commands', 'opsx', 'propose.md');
+      const edited = (await fs.readFile(exploreCmd, 'utf-8')) + '\nOur team step.\n';
+      await fs.writeFile(exploreCmd, edited);
+
+      setMockConfig({ featureFlags: {}, profile: 'core', delivery: 'skills' });
+      await new UpdateCommand({ force: true }).execute(testDir);
+
+      expect(await fs.readFile(exploreCmd, 'utf-8')).toBe(edited);
+      expect(await FileSystemUtils.fileExists(proposeCmd)).toBe(false);
     });
 
     it('lets a first-time legacy Codex upgrade claim an unowned agents root', async () => {
@@ -3809,7 +3832,7 @@ content
 
       const commandsDir = path.join(testDir, '.claude', 'commands', 'opsx');
       await fs.mkdir(commandsDir, { recursive: true });
-      await fs.writeFile(path.join(commandsDir, 'explore.md'), 'old command');
+      await fs.writeFile(path.join(commandsDir, 'explore.md'), generatedClaudeCommand('explore'));
 
       await updateCommand.execute(testDir);
 
@@ -3869,7 +3892,7 @@ content
       await fs.writeFile(path.join(skillsDir, 'openspec-new-change', 'SKILL.md'), 'old');
       const extraCommandFile = path.join(testDir, '.claude', 'commands', 'opsx', 'new.md');
       await fs.mkdir(path.dirname(extraCommandFile), { recursive: true });
-      await fs.writeFile(extraCommandFile, 'old');
+      await fs.writeFile(extraCommandFile, generatedClaudeCommand('new'));
 
       const consoleSpy = vi.spyOn(console, 'log');
 

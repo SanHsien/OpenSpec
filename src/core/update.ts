@@ -11,6 +11,7 @@ import ora from 'ora';
 import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
+import { removeUneditedCommandFiles, formatKeptCommandWarning } from './shared/command-removal.js';
 import { getSkillReferenceTransformer, getTransformerForTool, transformToSkillReferences } from '../utils/command-references.js';
 import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
 import {
@@ -810,30 +811,16 @@ export class UpdateCommand {
     projectPath: string,
     toolId: string,
   ): Promise<number> {
-    let removed = 0;
-
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (!adapter) return 0;
-
-    for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = FileSystemUtils.resolveProjectArtifactPath(projectPath, cmdPath);
-
-      try {
-        if (fs.existsSync(fullPath)) {
-          await fs.promises.unlink(fullPath);
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
+    const result = await removeUneditedCommandFiles(projectPath, toolId, ALL_WORKFLOWS);
+    if (result.kept.length > 0) {
+      console.log(chalk.yellow(formatKeptCommandWarning(result.kept)));
     }
-
-    return removed;
+    return result.removed;
   }
 
   /**
    * Removes command files for workflows that are no longer selected in the active profile.
+   * Files whose content differs from what OpenSpec generates are kept.
    * Returns the number of files removed.
    */
   private async removeUnselectedCommandFiles(
@@ -841,29 +828,13 @@ export class UpdateCommand {
     toolId: string,
     desiredWorkflows: readonly (typeof ALL_WORKFLOWS)[number][]
   ): Promise<number> {
-    let removed = 0;
-
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (!adapter) return 0;
-
     const desiredSet = new Set(desiredWorkflows);
-
-    for (const workflow of ALL_WORKFLOWS) {
-      if (desiredSet.has(workflow)) continue;
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = FileSystemUtils.resolveProjectArtifactPath(projectPath, cmdPath);
-
-      try {
-        if (fs.existsSync(fullPath)) {
-          await fs.promises.unlink(fullPath);
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
+    const unselected = ALL_WORKFLOWS.filter((w) => !desiredSet.has(w));
+    const result = await removeUneditedCommandFiles(projectPath, toolId, unselected);
+    if (result.kept.length > 0) {
+      console.log(chalk.yellow(formatKeptCommandWarning(result.kept)));
     }
-
-    return removed;
+    return result.removed;
   }
 
   /**

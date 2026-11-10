@@ -33,6 +33,7 @@
 | 產品 Release 工作流閘門 | 上游 `release-prepare.yml` 包含 `if: github.repository == 'Fission-AI/OpenSpec'` 防護，防止誤發 |
 | `docs/DECISIONS.md`、`docs/UPSTREAM.md`、`docs/DEVELOPMENT.md` | fork 維護架構、決策與開發文件 |
 | `REVIEW.md` | 全庫風險與安全快照 |
+| `src/core/shared/command-removal.ts`（`update.ts`、`init.ts` 的 command 檔刪除） | 部分採用上游 #2213 的「不刪使用者改過的 command 檔」：刪除前比對現行產出（忽略 CRLF 與 BOM），不同或為 symlink 就保留並警告；不搬上游的 fingerprint 表與其餘 update 重寫（見 `docs/DECISIONS.md` 2026-11-10） |
 | `.cursor/rules/no-upstream-pr.mdc` | Cursor IDE 機械防線（強制鎖定 SanHsien repo，防止誤開上游 PR） |
 
 產品程式碼在 `src/` 底下，以上游為準。

@@ -10,6 +10,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as fs from 'fs';
 import { createRequire } from 'module';
+import { removeUneditedCommandFiles, formatKeptCommandWarning } from './shared/command-removal.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import {
   classifyOpenSpecDir,
@@ -1471,24 +1472,10 @@ export class InitCommand {
   }
 
   private async removeCommandFiles(projectPath: string, toolId: string): Promise<number> {
-    let removed = 0;
-    const adapter = CommandAdapterRegistry.get(toolId);
-    if (!adapter) return 0;
-
-    for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = FileSystemUtils.resolveProjectArtifactPath(projectPath, cmdPath);
-
-      try {
-        if (fs.existsSync(fullPath)) {
-          await fs.promises.unlink(fullPath);
-          removed++;
-        }
-      } catch {
-        // Ignore errors
-      }
+    const result = await removeUneditedCommandFiles(projectPath, toolId, ALL_WORKFLOWS);
+    if (result.kept.length > 0) {
+      console.log(chalk.yellow(formatKeptCommandWarning(result.kept)));
     }
-
-    return removed;
+    return result.removed;
   }
 }
