@@ -916,3 +916,63 @@ Commit 水位 `27c0515`→`2bd5bc3be964404657439f538857fcdf550f7398`；PR 水位
 ### 水位
 
 Commit 水位 `2bd5bc3`→`0fa4a9705c20ef1c571fe3ded74435733e4b73a1`；PR 水位 `#2194`→`#2213`；Issue 水位 `#2195`→`#2216`；日期 `2026-11-08`。`monitored` 維持 7 筆原釘住狀態。水位只表示已讀取並有結論，不表示延後項目已處理。
+
+## 2026-11-10：上游增量審查（commit 0fa4a97..579fcac、PR #2217–#2225、issue #2220、monitored 查證）
+
+### 起因
+
+`tools/check_upstream_updates.py --strict` 在 2026-11-09 轉紅：上游 `main` 前進到 `579fcac`，落後 5 個 commit，另有 8 筆新 PR 與 1 筆新 Issue 待裁決。此次逐筆審查並把基線水位推進到 exit 0。
+
+### 四個面向
+
+| 面向 | 查法 | 結果 |
+| --- | --- | --- |
+| Commit | `git diff --shortstat <commit>^ <commit>` | 5 筆（`61d872c`、`a73eabb`、`dd92f90`、`9ca6b77`、`579fcac`），其中 `9ca6b77` 為 41 檔 +6955/-153，其餘 4 筆合計 11 檔 |
+| PR | 檢查器與 `gh pr view` | 新 8 筆（#2217、#2218、#2219、#2221、#2222、#2223、#2224、#2225） |
+| Issue | 檢查器與 `gh issue view` | 新 1 筆（#2220） |
+| Monitored | 檢查器實查 | 7 筆釘住項目（pr#2168、pr#2169、pr#2170、pr#2171、pr#2172、pr#2174、pr#2192）head 與 state 全數未變，0 漂移 |
+
+### 隱藏內容掃描
+
+已讀 `9ca6b77` 與開啟中的 #2223、#2224 的完整 diff（`git show`／`gh pr diff`），並掃零寬與雙向控制字元、新增行內的 HTML 註解、`curl | sh`、`iex`、`dangerously`、`bypassPermissions` 與提示注入字句。結果：零寬字元只出現在程式碼的 BOM 跳脫正規式（`generated-fingerprint.ts` 與兩個測試檔，用來測 BOM 容忍）；HTML 註解只是 `<!-- OPENSPEC:START/END -->` 標記與測試資料；其餘特徵 0 筆。#2224 的 3 個檔案全是 `docs-lab/team-trial/` 新增文件。
+
+### Commit 逐筆裁決（採用 0、略過 5）
+
+| 上游 Commit / PR | 結論 | 證據與觸發條件 |
+| --- | --- | --- |
+| `61d872c`（#2222，2 檔，`.github/workflows/binaries.yml` +11/-0、`scripts/binary/install.ps1` +8/-3） | 略過（不適用） | 修獨立二進位安裝腳本在 Windows PowerShell 偵測不到 CPU 的問題。本 fork 沒有 `scripts/binary/install.ps1` 也沒有 `binaries.yml`（#2137 已延後），改動沒有落點。重訪條件：決定採用 #2137。 |
+| `a73eabb`（#2221，2 檔，`flake.nix` +1/-1、`pnpm-lock.yaml` +227/-190） | 略過 | 只動上游 lockfile 與 flake 雜湊，`package.json` 未變。本 fork 的 lockfile 與依賴由 `check_dependency_freshness.py` 與 2026-10-30、11-08 的逐項裁決自行管理，不照搬上游 lockfile。 |
+| `dd92f90`（#2219，2 檔，`website/package.json` +5/-5、`website/pnpm-lock.yaml` +313/-319） | 略過 | 文件站依賴更新；本 fork 的 CI 與安全掃描排除 website，理由同 11-08 對 `631c911` 的裁決。 |
+| `9ca6b77`（#2213，41 檔 +6955/-153：`src/core/update.ts` +195/-50、`legacy-cleanup.ts` +141/-13、新增 `released-output-sweep.ts`、`shared/command-reconcile.ts`、`shared/generated-fingerprint.ts`、4010 行的 `released-generated-fingerprints.ts`，另含 `.gitattributes` +8、`ci.yml` +36） | 略過（延後） | 讓 `openspec update` 能從任何舊版一次升級，並預告 command 檔在 2.0 移除。本 fork 的同名檔已大幅分歧：忽略 CR 後與上游 `0fa4a97` 版本相比，`update.ts` 有 569 行不同、`legacy-cleanup.ts` 285 行、`init.ts` 80 行、`migration.ts` 157 行、`tool-detection.ts` 90 行，直接移植等於重做 update 流程。判斷與 11-08 它仍開啟時相同，改變的只是它已合併為 `9ca6b77`（head `76a7009e`）。維持 ROADMAP 中期「獨立規劃 update 重構與 beta skills」列。重訪條件：啟動 update 重構，或有使用者從 0.12 後的舊版直接升級而失敗。 |
+| `579fcac`（#2225，5 檔，3 個 changeset 刪除各 5 行、`CHANGELOG.md` +12/-0、`package.json` +1/-1） | 略過（不適用） | 上游發行 bot 消耗 changeset 並升版到 1.17.0；本 fork 不發布、不覆寫版本號，理由同 11-08 對 `0fa4a97` 的裁決。 |
+
+### 延後項重評：`ef170fa`（#2204）
+
+ROADMAP 與 11-08 裁決記載它延後到「決定重構本 fork 版本元資料或採用 PR #2001」。實查 `gh pr view 2001`：#2001 在 2026-09-29 已於上游合併（commit `56528ea`），不是新變化——09-30 裁決延後時對應的就是這個 commit。觸發條件指的是本 fork 自己決定採用，而 `src/` 內至今沒有 `checkForCliUpdate`，這次也沒有維護者決定採用，所以條件未成立，`ef170fa` 維持延後。順手更正：09-30 表格（本檔「PR #2001 … 跟隨上游（OPEN」那列）是當時的描述，上游狀態現為 MERGED，不改寫歷史。
+
+### PR 逐筆裁決（採用 0、略過 8）
+
+| PR | 狀態 / Commit | 結論 | 證據與觸發條件 |
+| --- | --- | --- | --- |
+| #2217 | CLOSED（未合併，head `30b52ff`） | 略過 | 單一依賴 bump，已被 #2221 取代。 |
+| #2218 | CLOSED（未合併，head `ea1f675`） | 略過 | dev 依賴 bump，已被 #2221 取代。 |
+| #2219 | MERGED（`dd92f90`） | 略過 | 文件站依賴，見 commit 裁決。 |
+| #2221 | MERGED（`a73eabb`） | 略過 | 上游 lockfile 整併，見 commit 裁決。 |
+| #2222 | MERGED（`61d872c`） | 略過 | 獨立二進位安裝腳本，本 fork 無此檔，見 commit 裁決。 |
+| #2223 | OPEN（head `24c3729`，82 檔 +11733/-1532） | 延後 | 把每個 skill 只寫一份到 `.agents/skills`，其餘工具目錄改放連結。堆在 #2213 之上、PR 描述自述為 2.0 major changeset 而保持 draft；新增 symlink 寫入路徑，與 ROADMAP 中期「重評 symlink 與 REMOVED／RENAMED 語意」及 update 重構兩列相衝，且 `init.ts`、`update.ts`、`tool-detection.ts` 都是上述分歧檔案。已讀完整 diff。重訪條件：啟動 update 重構，或維護者決定支援 symlink 目錄。 |
+| #2224 | OPEN（head `2715111`，3 檔 +196/-0） | 略過 | 只新增 `docs-lab/team-trial/` 的團隊試用指南，無程式碼；本 fork 不維護上游文件站內容。已讀完整 diff。 |
+| #2225 | MERGED（`579fcac`） | 略過 | 上游版本發布 1.17.0，見 commit 裁決。 |
+
+### Issue 逐筆裁決（採用 0、略過 1）
+
+| Issue | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2220 | CLOSED | 略過 | `irm .../install.ps1 \| iex` 在 Windows 11 抓不到 CPU 而丟例外，已由 #2222 修掉；本 fork 沒有這個安裝腳本，不適用。 |
+
+### Monitored 查證
+
+7 筆釘住項目（#2168、#2169、#2170、#2171、#2172、#2174、#2192）狀態與 commit head 與 baseline 完全一致，無漂移。此次新延後的 #2223 比照 11-08 的 #2198／#2213，不另外釘住，重訪條件已寫在上表。
+
+### 水位
+
+Commit 水位 `0fa4a97`→`579fcac5`（完整 hash 見 `tools/upstream_baseline.json`）；PR 水位 `#2213`→`#2225`；Issue 水位 `#2216`→`#2220`；日期 `2026-11-10`。`monitored` 維持 7 筆原釘住狀態。水位只表示已讀取並有結論，不表示延後項目已處理。
