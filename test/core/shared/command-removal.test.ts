@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import path from 'path';
 import fs from 'fs/promises';
 import os from 'os';
@@ -51,14 +51,15 @@ describe('removeUneditedCommandFiles', () => {
     expect(await exists(target('explore'))).toBe(false);
   });
 
-  it('keeps a symlinked command file and does not follow it', async () => {
+  it('keeps a symlinked command file and does not follow it', async (ctx) => {
     const real = path.join(dir, 'real.md');
     await fs.writeFile(real, generated('explore'));
     await fs.mkdir(path.dirname(target('explore')), { recursive: true });
     try {
       await fs.symlink(real, target('explore'), 'file');
     } catch {
-      return; // symlinks need privileges on some Windows setups
+      // symlinks need privileges on some Windows setups: report skipped, not a silent pass
+      ctx.skip();
     }
     const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
     expect(result.removed).toBe(0);
@@ -73,6 +74,5 @@ describe('removeUneditedCommandFiles', () => {
     const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
     expect(result.removed).toBe(1);
     expect(result.kept.map((k) => k.reason)).toEqual(['edited']);
-    vi.restoreAllMocks();
   });
 });
