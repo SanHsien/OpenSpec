@@ -976,3 +976,13 @@ ROADMAP 與 11-08 裁決記載它延後到「決定重構本 fork 版本元資�
 ### 水位
 
 Commit 水位 `0fa4a97`→`579fcac5`（完整 hash 見 `tools/upstream_baseline.json`）；PR 水位 `#2213`→`#2225`；Issue 水位 `#2216`→`#2220`；日期 `2026-11-10`。`monitored` 維持 7 筆原釘住狀態。水位只表示已讀取並有結論，不表示延後項目已處理。
+
+## 2026-11-10 追加：上游 issue #2226（cmd.exe 被偵測成 PowerShell）
+
+`--strict` 在同日稍晚因新 issue 再次轉紅：上游 `main` 仍在 `579fcac`（commit 與 PR 水位不動），只多一筆 issue。
+
+| Issue | 狀態 | 結論 | 證據與觸發條件 |
+| --- | --- | --- | --- |
+| [#2226](https://github.com/Fission-AI/OpenSpec/issues/2226) | OPEN，0 則留言，沒有關聯 PR | 延後（缺陷在 fork 存在） | 回報：Windows 上 `src/utils/shell-detection.ts` 把 `PSModulePath` 當成 PowerShell 的證據，但該變數是機器層級環境變數，cmd.exe 也有，所以 cmd.exe 下 `openspec completion install` 會誤改 PowerShell profile 並以 exit 0 結束。實查本 fork：`src/utils/shell-detection.ts` 第 103–109 行是同一段程式（`if (process.env.PSModulePath) return powershell`，在 `cmd.exe` 分支之前），缺陷成立。不在這輪修：回報者自己列的兩個方向（查父行程、找只有執行中的 PowerShell 才會加進 `PSModulePath` 的使用者路徑）都沒驗證過，且從 PowerShell 啟動的 cmd.exe 會繼承該路徑，沒有可靠訊號；沒有上游修正可移植，自己設計偵測方式屬行為變更，應等上游裁決再對齊。重訪條件：上游合併修正（移植並先紅後綠），或本 fork 有人回報在 cmd.exe 誤裝 profile。已列入 ROADMAP 中期表。 |
+
+水位：Issue 水位 `#2220`→`#2226`；commit 與 PR 水位、日期不變；`monitored` 維持 7 筆。水位只表示已讀取並有結論，不表示延後項目已處理。
