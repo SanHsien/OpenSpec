@@ -1003,7 +1003,7 @@ fork 額外保留的只有上游沒有的一項：`matchSupportedShell` 與未�
 | --- | --- |
 | 只與「今天的模板輸出」比對：升級後未改過的舊產出被當成已編輯，每次 update 重複警告 | `init`／`update` 寫入 command 檔時，把每個檔的 SHA-256（先去 BOM、CRLF 轉 LF，與比對一致）記到 `openspec/.generated-commands.json`（專案的 `openspec/` 狀態目錄，隨 repo 走；缺 `openspec/` 或寫入失敗一律靜默略過，不讓 update 失敗）。移除時「內容等於今天的產出」或「雜湊等於記錄」才刪，刪掉後移除該筆記錄；重新產生則覆蓋雜湊。manifest 壞掉當作空的，退回只比對現行模板。 |
 | 沒有記錄的舊檔 | 維持保留（無從證明不是使用者的檔），警告改為「無法確認是否由 OpenSpec 產生（可能被改過、來自舊版 OpenSpec，或在專案之外）」，不再說 OpenSpec 沒產生過。沒有回溯補記：補記等於把現況當成產出，會把使用者改過的檔蓋章。 |
-| 比對與 unlink 之間 TOCTOU | unlink 前再 `lstat`，size／mtimeMs 與讀取前不同或變成 symlink 就保留（reason `edited`）。 |
+| 比對與 unlink 之間 TOCTOU | unlink 前再 `lstat`，size／mtimeMs 與讀取前不同或變成 symlink 就保留（reason `edited`）。這是縮窄而非消除：沒有原子的比對後刪除，lstat 與 unlink 之間的極短空檔仍可能遺失剛存的編輯。 |
 | 父目錄逃逸讓整批中止 | 路徑解析移進每個 workflow 的 try，記為 `outside-project`（絕對路徑的全域 command 檔也屬此類）；解析時的檔案系統錯誤（EACCES 等有 errno code 者）記 `unverifiable`。 |
 | 測試缺口 | 補不依賴 symlink 權限的 `..` 與絕對路徑逃逸、BOM 單獨、EISDIR（目錄佔位）測試。 |
 
@@ -1037,5 +1037,10 @@ fork 額外保留的只有上游沒有的一項：`matchSupportedShell` 與未�
 | #2231 | OPEN | 略過 | 申請把 rightcommit 加進上游 Community Showcase，是上游文件內容。 |
 | #2232 | OPEN，0 則留言，沒有關聯 PR | 延後 | 回報：`.agents/skills` 是指向 `.claude/skills` 的 symlink 時，`openspec update` 每跑一次就在 `/opsx:*` 與 `/openspec-*` 之間來回改寫六個 skill。fork 有同一個 `src/core/shared-skill-target.ts`，但重現需要 symlink（本機沒有 symlink 權限，現有 symlink 測試都會 skip），回報者也自述沒有追到根因。觸發條件：上游合併修正，或有人回報在 fork 看到來回改寫；移植時要在可建 symlink 的環境先紅後綠。已列入 ROADMAP 中期表。 |
 | #2234 | OPEN | 略過 | 上游 CI 對純文件 PR 略過測試的提案；fork 的 CI 與必要檢查是自己的。 |
+
+### 補充：`TASK_LINE_PATTERN` 照上游放寬，以及測試暫存目錄
+
+- fork 的任務行偵測仍是舊窄版（只認 `-`／`*` 與 `[ ]`／`[x]`），所以 `1. [ ]`、`+ [ ]`、`[~]` 之類的未完成任務不計入，archive 會對有未完成工作的 change 顯示「Complete」。照上游 `a959be77` 的 `task-progress.ts` 移植整段說明與規則運算式（任何 CommonMark 清單記號、單一非空白標記一律算未完成、只有 `x`／`X` 算完成，並排除方括號後緊接小括號的連結項目），上游相關測試區塊（#1761 系列）整段搬入，先紅後綠（7 個失敗）。
+- `b2ccf57f` 不慎把 `test/commands/spec.test.ts`、`validate.test.ts` 跑出來的 `test-spec-command-tmp/`、`test-validate-command-tmp/` 共 10 檔提交進來。已從版控移除、`.gitignore` 加 `test-*-command-tmp/`，並讓兩個測試改用 `os.tmpdir()` 底下的 `mkdtemp`，跑測試不再弄髒工作樹。
 
 水位：commit `579fcac5`→`a959be77`；PR 水位 `#2225`→`#2233`；Issue 水位 `#2226`→`#2234`；日期 `2026-11-11`；`monitored` 維持 7 筆（`--strict` 回報無漂移）。水位只表示已讀取並有結論，不表示延後項目已處理。

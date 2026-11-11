@@ -35,7 +35,7 @@
 | `REVIEW.md` | 全庫風險與安全快照 |
 | `src/core/shared/command-removal.ts`（`update.ts`、`init.ts` 的 command 檔刪除） | 部分採用上游 #2213 的「不刪使用者改過的 command 檔」：刪除前比對現行產出（忽略 CRLF 與 BOM），不同或為 symlink 就保留並警告；不搬上游的 fingerprint 表與其餘 update 重寫（見 `docs/DECISIONS.md` 2026-11-10）；另在 `openspec/.generated-commands.json` 記下每個產出檔的 SHA-256，內容等於現行產出或等於當時記錄的雜湊才刪（舊模板產出且未改過的檔升級後仍可清掉）；無記錄的舊檔保留並說「無法確認是否由 OpenSpec 產生」；刪除前重 stat 防 TOCTOU，逃出專案的路徑記為 outside-project 不中斷整批 |
 | `src/utils/shell-detection.ts` | 採用上游 #2229 的 Windows PowerShell／cmd.exe 判斷（與上游相同）；另多一項上游沒有的：比對 shell 時接受 `.exe` 結尾與反斜線路徑（Git Bash 的 `SHELL=/bin/bash.exe`） |
-| `src/utils/task-progress.ts`（`parseTaskLines`） | 移植上游 #2228 的解析部分：換行的任務併成一筆描述（不含上游的任務行號與 docs-lab 文字，fork 尚無該功能） |
+| `src/utils/task-progress.ts`（`parseTaskLines`） | 移植上游 #2228 的解析部分：換行的任務併成一筆描述（不含上游的任務行號與 docs-lab 文字，fork 尚無該功能）；任務行規則運算式照上游放寬（`1.`／`+`、`[~]` 等未知標記算未完成），避免 archive 對未完成工作顯示「Complete」 |
 | `.cursor/rules/no-upstream-pr.mdc` | Cursor IDE 機械防線（強制鎖定 SanHsien repo，防止誤開上游 PR） |
 
 產品程式碼在 `src/` 底下，以上游為準。
