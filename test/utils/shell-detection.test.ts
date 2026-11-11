@@ -138,6 +138,33 @@ describe('shell-detection', () => {
       expect(result.shell).toBe('fish');
     });
 
+    it('should detect Git Bash style SHELL values that end in .exe', () => {
+      const paths = [
+        '/bin/bash.exe',
+        '/usr/bin/bash.exe',
+        'C:\\Program Files\\Git\\bin\\bash.exe',
+        'C:\\Program Files\\Git\\usr\\bin\\BASH.EXE',
+      ];
+      for (const path of paths) {
+        process.env.SHELL = path;
+        const result = detectShell();
+        expect(result.shell).toBe('bash');
+        expect(result.detected).toBe('bash');
+      }
+    });
+
+    it('should detect zsh and fish with an .exe suffix', () => {
+      process.env.SHELL = '/usr/bin/zsh.exe';
+      expect(detectShell().shell).toBe('zsh');
+      process.env.SHELL = '/usr/bin/fish.exe';
+      expect(detectShell().shell).toBe('fish');
+    });
+
+    it('should not treat lookalikes with an .exe suffix as a shell', () => {
+      process.env.SHELL = '/usr/bin/bash-language-server.exe';
+      expect(detectShell().shell).toBeUndefined();
+    });
+
     it('should detect PowerShell from PSModulePath environment variable', () => {
       process.env.PSModulePath = 'C:\\Program Files\\PowerShell\\Modules';
       const result = detectShell();

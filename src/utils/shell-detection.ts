@@ -21,8 +21,16 @@ export interface ShellDetectionResult {
 function matchSupportedShell(name: string): SupportedShell | undefined {
   // Match the executable basename exactly so lookalikes such as `fish-lsp` or
   // `bash-language-server` don't get mistaken for the shell itself. Login
-  // shells report a leading dash (e.g. `-zsh`), so strip it first.
-  const executable = name.trim().toLowerCase().split('/').pop()?.replace(/^-/, '');
+  // shells report a leading dash (e.g. `-zsh`), so strip it first. Windows
+  // shells (Git Bash reports `SHELL=/bin/bash.exe`) use either separator and
+  // carry an `.exe` suffix.
+  const executable = name
+    .trim()
+    .toLowerCase()
+    .split(/[\\/]/)
+    .pop()
+    ?.replace(/^-/, '')
+    .replace(/\.exe$/, '');
   if (executable === 'zsh') return 'zsh';
   if (executable === 'bash') return 'bash';
   if (executable === 'fish') return 'fish';
