@@ -166,20 +166,45 @@ describe('shell-detection', () => {
     });
 
     it('should detect PowerShell from PSModulePath environment variable', () => {
+      // pwsh on Linux/macOS sets PSModulePath for itself; only Windows is ambiguous.
+      Object.defineProperty(process, 'platform', { value: 'linux' });
       process.env.PSModulePath = 'C:\\Program Files\\PowerShell\\Modules';
       const result = detectShell();
       expect(result.shell).toBe('powershell');
       expect(result.detected).toBe('powershell');
     });
 
-    it('should detect PowerShell on Windows platform with PSModulePath', () => {
+    it('should NOT infer PowerShell from the machine-level PSModulePath on Windows (#2226)', () => {
+      // PSModulePath is a machine-level variable that cmd.exe inherits too, so
+      // it cannot tell PowerShell from cmd.exe; the user must name the shell.
       Object.defineProperty(process, 'platform', {
         value: 'win32',
       });
       process.env.PSModulePath = 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules';
+      process.env.COMSPEC = 'C:\\Windows\\System32\\cmd.exe';
       const result = detectShell();
-      expect(result.shell).toBe('powershell');
-      expect(result.detected).toBe('powershell');
+      expect(result.shell).toBeUndefined();
+    });
+
+    it('should not report cmd.exe from COMSPEC alone on Windows', () => {
+      // COMSPEC is also machine-level and is set inside PowerShell, so naming
+      // cmd.exe would tell PowerShell users their shell is unsupported.
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+      });
+      process.env.PSModulePath = 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules';
+      process.env.COMSPEC = 'C:\\Windows\\System32\\cmd.exe';
+      const result = detectShell();
+      expect(result.detected).toBeUndefined();
+    });
+
+    it('should still honour an explicit SHELL on Windows (Git Bash)', () => {
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+      });
+      process.env.PSModulePath = 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\Modules';
+      process.env.SHELL = '/usr/bin/bash.exe';
+      expect(detectShell().shell).toBe('bash');
     });
 
     it('should return detected name for unsupported shell', () => {
@@ -196,16 +221,6 @@ describe('shell-detection', () => {
       const result = detectShell();
       expect(result.shell).toBeUndefined();
       expect(result.detected).toBeUndefined();
-    });
-
-    it('should return detected name for cmd.exe on Windows', () => {
-      Object.defineProperty(process, 'platform', {
-        value: 'win32',
-      });
-      process.env.COMSPEC = 'C:\\Windows\\System32\\cmd.exe';
-      const result = detectShell();
-      expect(result.shell).toBeUndefined();
-      expect(result.detected).toBe('cmd.exe');
     });
 
     it('should return undefined when no shell information is available', () => {
@@ -272,7 +287,7 @@ describe('shell-detection', () => {
       Object.defineProperty(process, 'platform', { value: 'win32' });
       process.env.PSModulePath = 'C:\\Program Files\\PowerShell\\Modules';
       const result = detectShell();
-      expect(result.shell).toBe('powershell');
+      expect(result.shell).toBeUndefined();
       expect(mockedExecFileSync).not.toHaveBeenCalled();
     });
   });

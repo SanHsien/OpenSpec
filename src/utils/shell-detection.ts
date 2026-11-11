@@ -49,7 +49,7 @@ function matchSupportedShell(name: string): SupportedShell | undefined {
  * @returns The supported shell running as the parent process, or undefined
  */
 function detectShellFromParentProcess(): SupportedShell | undefined {
-  // `ps` is POSIX-only; Windows shells are handled via PSModulePath/COMSPEC.
+  // `ps` is POSIX-only; on Windows there is no cheap, reliable signal (see detectShell).
   if (process.platform === 'win32') {
     return undefined;
   }
@@ -101,25 +101,22 @@ export function detectShell(): ShellDetectionResult {
 
     // Shell detected but not supported
     // Extract shell name from path (e.g., /bin/tcsh -> tcsh)
-    const match = shellPath.match(/\/([^/]+)$/);
+    const match = shellPath.match(/[\\/]([^\\/]+)$/);
     const detectedName = match ? match[1] : shellPath;
     return { shell: undefined, detected: detectedName };
   }
 
-  // Check for PowerShell on Windows
-  // PSModulePath is a reliable PowerShell-specific environment variable
-  if (process.env.PSModulePath || process.platform === 'win32') {
-    const comspec = process.env.COMSPEC?.toLowerCase();
+  // On Windows neither PSModulePath nor COMSPEC identifies the running shell:
+  // both are machine-level variables that cmd.exe and PowerShell inherit alike
+  // (upstream #2226 — cmd.exe users had their PowerShell profile rewritten).
+  // Report nothing so the caller asks for an explicit shell argument.
+  if (process.platform === 'win32') {
+    return { shell: undefined, detected: undefined };
+  }
 
-    // If PSModulePath exists, we're definitely in PowerShell
-    if (process.env.PSModulePath) {
-      return { shell: 'powershell', detected: 'powershell' };
-    }
-
-    // On Windows without PSModulePath, we might be in cmd.exe
-    if (comspec?.includes('cmd.exe')) {
-      return { shell: undefined, detected: 'cmd.exe' };
-    }
+  // PowerShell on Linux/macOS sets PSModulePath for its own session only.
+  if (process.env.PSModulePath) {
+    return { shell: 'powershell', detected: 'powershell' };
   }
 
   return { shell: undefined, detected: undefined };

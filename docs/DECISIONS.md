@@ -983,6 +983,16 @@ Commit 水位 `0fa4a97`→`579fcac5`（完整 hash 見 `tools/upstream_baseline.
 
 | Issue | 狀態 | 結論 | 證據與觸發條件 |
 | --- | --- | --- | --- |
-| [#2226](https://github.com/Fission-AI/OpenSpec/issues/2226) | OPEN，0 則留言，沒有關聯 PR | 延後（缺陷在 fork 存在） | 回報：Windows 上 `src/utils/shell-detection.ts` 把 `PSModulePath` 當成 PowerShell 的證據，但該變數是機器層級環境變數，cmd.exe 也有，所以 cmd.exe 下 `openspec completion install` 會誤改 PowerShell profile 並以 exit 0 結束。實查本 fork：`src/utils/shell-detection.ts` 第 103–109 行是同一段程式（`if (process.env.PSModulePath) return powershell`，在 `cmd.exe` 分支之前），缺陷成立。不在這輪修：回報者自己列的兩個方向（查父行程、找只有執行中的 PowerShell 才會加進 `PSModulePath` 的使用者路徑）都沒驗證過，且從 PowerShell 啟動的 cmd.exe 會繼承該路徑，沒有可靠訊號；沒有上游修正可移植，自己設計偵測方式屬行為變更，應等上游裁決再對齊。重訪條件：上游合併修正（移植並先紅後綠），或本 fork 有人回報在 cmd.exe 誤裝 profile。已列入 ROADMAP 中期表。 |
+| [#2226](https://github.com/Fission-AI/OpenSpec/issues/2226) | OPEN，0 則留言，沒有關聯 PR | 已在 fork 修正（2026-11-11 更新，見下方「追加：#2226 修正做法」；以下為當時的延後判斷） | 回報：Windows 上 `src/utils/shell-detection.ts` 把 `PSModulePath` 當成 PowerShell 的證據，但該變數是機器層級環境變數，cmd.exe 也有，所以 cmd.exe 下 `openspec completion install` 會誤改 PowerShell profile 並以 exit 0 結束。實查本 fork：`src/utils/shell-detection.ts` 第 103–109 行是同一段程式（`if (process.env.PSModulePath) return powershell`，在 `cmd.exe` 分支之前），缺陷成立。不在這輪修：回報者自己列的兩個方向（查父行程、找只有執行中的 PowerShell 才會加進 `PSModulePath` 的使用者路徑）都沒驗證過，且從 PowerShell 啟動的 cmd.exe 會繼承該路徑，沒有可靠訊號；沒有上游修正可移植，自己設計偵測方式屬行為變更，應等上游裁決再對齊。重訪條件：上游合併修正（移植並先紅後綠），或本 fork 有人回報在 cmd.exe 誤裝 profile。已列入 ROADMAP 中期表。 |
 
 水位：Issue 水位 `#2220`→`#2226`；commit 與 PR 水位、日期不變；`monitored` 維持 7 筆。水位只表示已讀取並有結論，不表示延後項目已處理。
+
+## 2026-11-11 追加：#2226 與 `.exe` shell 在 fork 修正
+
+獨立覆核確認兩個既有缺陷，皆先寫紅燈測試再修（`test/utils/shell-detection.test.ts`）：
+
+| 項目 | 做法與理由 |
+| --- | --- |
+| `SHELL=/bin/bash.exe`（Git Bash）被判不支援 | `matchSupportedShell` 比對前以 `/` 或 `\` 切路徑、去掉結尾 `.exe`（大小寫不敏感）；`bash-language-server.exe` 之類仍不算 shell。 |
+| #2226（cmd.exe 被當 PowerShell） | Windows 上 `PSModulePath` 與 `COMSPEC` 都是機器層級變數，cmd.exe 與 PowerShell 都繼承，所以兩者都不能當證據：未設 `SHELL` 時 `detectShell()` 回 `{ shell: undefined, detected: undefined }`，`completion install` 顯示「Could not auto-detect shell. Please specify shell explicitly」並 exit 1，不再改寫 PowerShell profile。曾考慮查父行程名稱，但在 Windows 要多一次行程查詢（`Get-CimInstance`／`wmic`）且從 PowerShell 啟動的 cmd.exe 鏈會誤判，不夠便宜也不夠可靠，未採用。Linux／macOS 的 pwsh 自己設定 `PSModulePath`，維持原行為。 |
+| completion-tip | `detectShell()` 回 undefined 時原本就靜默收掉提示（「install 會 exit 1，指過去是死路」），Windows 使用者因此不再看到提示；要用 completion 就明確寫 `openspec completion install powershell`。 |
