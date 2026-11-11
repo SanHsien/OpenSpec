@@ -33,7 +33,7 @@
 | 產品 Release 工作流閘門 | 上游 `release-prepare.yml` 包含 `if: github.repository == 'Fission-AI/OpenSpec'` 防護，防止誤發 |
 | `docs/DECISIONS.md`、`docs/UPSTREAM.md`、`docs/DEVELOPMENT.md` | fork 維護架構、決策與開發文件 |
 | `REVIEW.md` | 全庫風險與安全快照 |
-| `src/core/shared/command-removal.ts`（`update.ts`、`init.ts` 的 command 檔刪除） | 部分採用上游 #2213 的「不刪使用者改過的 command 檔」：刪除前比對現行產出（忽略 CRLF 與 BOM），不同或為 symlink 就保留並警告；不搬上游的 fingerprint 表與其餘 update 重寫（見 `docs/DECISIONS.md` 2026-11-10） |
+| `src/core/shared/command-removal.ts`（`update.ts`、`init.ts` 的 command 檔刪除） | 部分採用上游 #2213 的「不刪使用者改過的 command 檔」：刪除前比對現行產出（忽略 CRLF 與 BOM），不同或為 symlink 就保留並警告；不搬上游的 fingerprint 表與其餘 update 重寫（見 `docs/DECISIONS.md` 2026-11-10）；另在 `openspec/.generated-commands.json` 記下每個產出檔的 SHA-256，內容等於現行產出或等於當時記錄的雜湊才刪（舊模板產出且未改過的檔升級後仍可清掉）；無記錄的舊檔保留並說「無法確認是否由 OpenSpec 產生」；刪除前重 stat 防 TOCTOU，逃出專案的路徑記為 outside-project 不中斷整批 |
 | `src/utils/shell-detection.ts` | 比對 shell 時接受 `.exe` 結尾與反斜線路徑（Git Bash 的 `SHELL=/bin/bash.exe`）；Windows 不再用 `PSModulePath`／`COMSPEC` 推論 shell（上游 #2226 尚未修），未設 `SHELL` 時回 undefined 要求明確指定 |
 | `.cursor/rules/no-upstream-pr.mdc` | Cursor IDE 機械防線（強制鎖定 SanHsien repo，防止誤開上游 PR） |
 

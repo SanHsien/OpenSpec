@@ -359,6 +359,19 @@ describe('InitCommand', () => {
       }
     );
 
+    it('should record a SHA-256 for every generated command file in the manifest', async () => {
+      await new InitCommand({ tools: 'claude', force: true }).execute(testDir);
+
+      const manifest = JSON.parse(
+        await fs.readFile(path.join(testDir, 'openspec', '.generated-commands.json'), 'utf-8')
+      );
+      const keys = Object.keys(manifest.files);
+      expect(keys).toContain('.claude/commands/opsx/explore.md');
+      for (const value of Object.values(manifest.files)) {
+        expect(value).toMatch(/^[0-9a-f]{64}$/);
+      }
+    });
+
     it('should create core profile commands for Claude Code by default', async () => {
       const initCommand = new InitCommand({ tools: 'claude', force: true });
 

@@ -996,3 +996,17 @@ Commit 水位 `0fa4a97`→`579fcac5`（完整 hash 見 `tools/upstream_baseline.
 | `SHELL=/bin/bash.exe`（Git Bash）被判不支援 | `matchSupportedShell` 比對前以 `/` 或 `\` 切路徑、去掉結尾 `.exe`（大小寫不敏感）；`bash-language-server.exe` 之類仍不算 shell。 |
 | #2226（cmd.exe 被當 PowerShell） | Windows 上 `PSModulePath` 與 `COMSPEC` 都是機器層級變數，cmd.exe 與 PowerShell 都繼承，所以兩者都不能當證據：未設 `SHELL` 時 `detectShell()` 回 `{ shell: undefined, detected: undefined }`，`completion install` 顯示「Could not auto-detect shell. Please specify shell explicitly」並 exit 1，不再改寫 PowerShell profile。曾考慮查父行程名稱，但在 Windows 要多一次行程查詢（`Get-CimInstance`／`wmic`）且從 PowerShell 啟動的 cmd.exe 鏈會誤判，不夠便宜也不夠可靠，未採用。Linux／macOS 的 pwsh 自己設定 `PSModulePath`，維持原行為。 |
 | completion-tip | `detectShell()` 回 undefined 時原本就靜默收掉提示（「install 會 exit 1，指過去是死路」），Windows 使用者因此不再看到提示；要用 completion 就明確寫 `openspec completion install powershell`。 |
+
+## 2026-11-11 追加：command-removal 的產出紀錄（manifest）與邊界修補
+
+獨立覆核對 `700a41a5`（部分採用上游 #2213）提出的問題，皆先紅後綠（`test/core/shared/command-removal.test.ts`、`test/core/init.test.ts`）：
+
+| 問題 | 做法與理由 |
+| --- | --- |
+| 只與「今天的模板輸出」比對：升級後未改過的舊產出被當成已編輯，每次 update 重複警告 | `init`／`update` 寫入 command 檔時，把每個檔的 SHA-256（先去 BOM、CRLF 轉 LF，與比對一致）記到 `openspec/.generated-commands.json`（專案的 `openspec/` 狀態目錄，隨 repo 走；缺 `openspec/` 或寫入失敗一律靜默略過，不讓 update 失敗）。移除時「內容等於今天的產出」或「雜湊等於記錄」才刪，刪掉後移除該筆記錄；重新產生則覆蓋雜湊。manifest 壞掉當作空的，退回只比對現行模板。 |
+| 沒有記錄的舊檔 | 維持保留（無從證明不是使用者的檔），警告改為「無法確認是否由 OpenSpec 產生（可能被改過、來自舊版 OpenSpec，或在專案之外）」，不再說 OpenSpec 沒產生過。沒有回溯補記：補記等於把現況當成產出，會把使用者改過的檔蓋章。 |
+| 比對與 unlink 之間 TOCTOU | unlink 前再 `lstat`，size／mtimeMs 與讀取前不同或變成 symlink 就保留（reason `edited`）。 |
+| 父目錄逃逸讓整批中止 | 路徑解析移進每個 workflow 的 try，記為 `outside-project`（絕對路徑的全域 command 檔也屬此類）；解析時的檔案系統錯誤（EACCES 等有 errno code 者）記 `unverifiable`。 |
+| 測試缺口 | 補不依賴 symlink 權限的 `..` 與絕對路徑逃逸、BOM 單獨、EISDIR（目錄佔位）測試。 |
+
+未做：manifest 不提交到哪裡、是否加進 `.gitignore` 沒有硬規定；它是可重建的紀錄，丟失只會讓舊檔回到「保留並警告」。

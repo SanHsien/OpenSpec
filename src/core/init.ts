@@ -10,7 +10,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import * as fs from 'fs';
 import { createRequire } from 'module';
-import { removeUneditedCommandFiles, formatKeptCommandWarning } from './shared/command-removal.js';
+import { removeUneditedCommandFiles, recordGeneratedCommandFiles, formatKeptCommandWarning } from './shared/command-removal.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import {
   classifyOpenSpecDir,
@@ -991,6 +991,7 @@ export class InitCommand {
               const commandFile = FileSystemUtils.resolveProjectArtifactPath(projectPath, cmd.path);
               await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
             }
+            await recordGeneratedCommandFiles(projectPath, generatedCommands);
           }
         } else if (deliveryIncludesCommands) {
           if (resolveCommandSurfaceCapability(tool.value) === 'skills-invocable') {

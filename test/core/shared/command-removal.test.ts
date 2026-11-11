@@ -4,7 +4,12 @@ import nodeFs from 'node:fs';
 import { syncBuiltinESMExports } from 'node:module';
 import fs from 'fs/promises';
 import os from 'os';
-import { removeUneditedCommandFiles } from '../../../src/core/shared/command-removal.js';
+import {
+  removeUneditedCommandFiles,
+  recordGeneratedCommandFiles,
+  formatKeptCommandWarning,
+  COMMAND_MANIFEST_PATH,
+} from '../../../src/core/shared/command-removal.js';
 import { CommandAdapterRegistry, generateCommand } from '../../../src/core/command-generation/index.js';
 import { getCommandContents } from '../../../src/core/shared/skill-generation.js';
 import { ALL_WORKFLOWS } from '../../../src/core/profiles.js';
@@ -163,5 +168,88 @@ describe('removeUneditedCommandFiles', () => {
     expect(result.removed).toBe(0);
     expect(result.kept).toEqual([{ path: adapter().getFilePath('explore'), reason: 'unverifiable' }]);
     expect(await exists(target('explore'))).toBe(true);
+  });
+
+  describe('manifest of generated command files', () => {
+    const rel = (wf: string) => adapter().getFilePath(wf);
+    const manifestFile = () => path.join(dir, COMMAND_MANIFEST_PATH);
+
+    beforeEach(async () => {
+      await fs.mkdir(path.join(dir, 'openspec'), { recursive: true });
+    });
+
+    it('removes an unedited file written by an older template once its hash is recorded', async () => {
+      const oldOutput = '---\nold template\n---\nbody from a previous OpenSpec version\n';
+      await write('explore', oldOutput);
+      await recordGeneratedCommandFiles(dir, [{ path: rel('explore'), fileContent: oldOutput }]);
+      expect(oldOutput).not.toBe(generated('explore'));
+
+      const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+      expect(result).toEqual({ removed: 1, kept: [] });
+      expect(await exists(target('explore'))).toBe(false);
+    });
+
+    it('drops the manifest entry of a removed file', async () => {
+      const oldOutput = 'old output\n';
+      await write('explore', oldOutput);
+      await recordGeneratedCommandFiles(dir, [{ path: rel('explore'), fileContent: oldOutput }]);
+      await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+      const manifest = JSON.parse(await fs.readFile(manifestFile(), 'utf-8'));
+      expect(Object.keys(manifest.files)).not.toContain(rel('explore').split(path.sep).join('/'));
+    });
+
+    it('keeps a recorded file the user edited afterwards', async () => {
+      const oldOutput = 'old output\n';
+      await recordGeneratedCommandFiles(dir, [{ path: rel('explore'), fileContent: oldOutput }]);
+      await write('explore', oldOutput + 'my team step\n');
+      const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+      expect(result.removed).toBe(0);
+      expect(result.kept).toEqual([{ path: rel('explore'), reason: 'edited' }]);
+    });
+
+    it('recognises a recorded file after a CRLF checkout', async () => {
+      const oldOutput = 'line one\nline two\n';
+      await recordGeneratedCommandFiles(dir, [{ path: rel('explore'), fileContent: oldOutput }]);
+      await write('explore', oldOutput.replace(/\n/g, '\r\n'));
+      const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+      expect(result.removed).toBe(1);
+    });
+
+    it('keeps an old file with no manifest record', async () => {
+      await write('explore', 'written by an OpenSpec that kept no manifest\n');
+      const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+      expect(result.removed).toBe(0);
+      expect(result.kept).toHaveLength(1);
+    });
+
+    it('survives a corrupt manifest by falling back to the current-template comparison', async () => {
+      await fs.writeFile(manifestFile(), '{ not json');
+      await write('explore', generated('explore'));
+      const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+      expect(result.removed).toBe(1);
+    });
+
+    it('does not create the manifest when the project has no openspec directory', async () => {
+      await fs.rm(path.join(dir, 'openspec'), { recursive: true, force: true });
+      await recordGeneratedCommandFiles(dir, [{ path: rel('explore'), fileContent: 'x' }]);
+      expect(await exists(manifestFile())).toBe(false);
+    });
+
+    it('overwrites the recorded hash when a file is regenerated', async () => {
+      await recordGeneratedCommandFiles(dir, [{ path: rel('explore'), fileContent: 'v1\n' }]);
+      await recordGeneratedCommandFiles(dir, [{ path: rel('explore'), fileContent: 'v2\n' }]);
+      await write('explore', 'v1\n');
+      const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+      expect(result.removed).toBe(0);
+    });
+  });
+
+  describe('formatKeptCommandWarning', () => {
+    it('does not claim OpenSpec did not generate a file it cannot judge', () => {
+      const text = formatKeptCommandWarning([{ path: '.claude/commands/opsx/explore.md', reason: 'edited' }]);
+      expect(text).not.toMatch(/did not generate/i);
+      expect(text).toMatch(/cannot confirm/i);
+      expect(text).toContain('.claude/commands/opsx/explore.md (edited)');
+    });
   });
 });

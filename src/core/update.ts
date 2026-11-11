@@ -11,7 +11,7 @@ import ora from 'ora';
 import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
-import { removeUneditedCommandFiles, formatKeptCommandWarning } from './shared/command-removal.js';
+import { removeUneditedCommandFiles, recordGeneratedCommandFiles, formatKeptCommandWarning } from './shared/command-removal.js';
 import { getSkillReferenceTransformer, getTransformerForTool, transformToSkillReferences } from '../utils/command-references.js';
 import { AI_TOOLS, OPENSPEC_DIR_NAME } from './config.js';
 import {
@@ -359,6 +359,7 @@ export class UpdateCommand {
               );
               await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
             }
+            await recordGeneratedCommandFiles(resolvedProjectPath, generatedCommands);
 
             removedDeselectedCommandCount += await this.removeUnselectedCommandFiles(
               resolvedProjectPath,
@@ -1255,6 +1256,7 @@ export class UpdateCommand {
               );
               await FileSystemUtils.writeFile(commandFile, cmd.fileContent);
             }
+            await recordGeneratedCommandFiles(projectPath, generatedCommands);
           }
         }
 
