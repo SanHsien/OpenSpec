@@ -1,5 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import path from 'path';
+import nodeFs from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import fs from 'fs/promises';
 import os from 'os';
 import { removeUneditedCommandFiles } from '../../../src/core/shared/command-removal.js';
@@ -74,5 +76,28 @@ describe('removeUneditedCommandFiles', () => {
     const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
     expect(result.removed).toBe(1);
     expect(result.kept.map((k) => k.reason)).toEqual(['edited']);
+  });
+
+  it('keeps a file that changes between the comparison and the delete (TOCTOU)', async () => {
+    await write('explore', generated('explore'));
+    const realRead = nodeFs.readFileSync;
+    const spy = vi.spyOn(nodeFs, 'readFileSync').mockImplementation(((...args: Parameters<typeof realRead>) => {
+      const data = realRead(...args);
+      spy.mockRestore();
+      syncBuiltinESMExports();
+      // The user saves an edit right after we read the unedited content.
+      nodeFs.writeFileSync(target('explore'), 'user rewrote this after we read it, with a different size');
+      return data;
+    }) as typeof realRead);
+    syncBuiltinESMExports();
+    try {
+      const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+      expect(result.removed).toBe(0);
+      expect(result.kept).toEqual([{ path: adapter().getFilePath('explore'), reason: 'edited' }]);
+      expect(await fs.readFile(target('explore'), 'utf-8')).toContain('user rewrote this');
+    } finally {
+      spy.mockRestore();
+      syncBuiltinESMExports();
+    }
   });
 });

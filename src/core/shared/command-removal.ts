@@ -59,6 +59,14 @@ export async function removeUneditedCommandFiles(
         result.kept.push({ path: relPath, reason: 'edited' });
         continue;
       }
+      // The user may save an edit between the read above and the delete. Re-stat
+      // right before unlinking and keep the file if it is no longer the one we
+      // compared (size/mtime moved, or it became a symlink).
+      const latest = fs.lstatSync(fullPath);
+      if (latest.isSymbolicLink() || latest.size !== stat.size || latest.mtimeMs !== stat.mtimeMs) {
+        result.kept.push({ path: relPath, reason: 'edited' });
+        continue;
+      }
       await fs.promises.unlink(fullPath);
       result.removed++;
     } catch {
