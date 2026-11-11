@@ -176,3 +176,6 @@ __pycache__/
 *.pyc
 
 
+
+# Scratch directories some command tests used to create inside the repo
+test-*-command-tmp/
