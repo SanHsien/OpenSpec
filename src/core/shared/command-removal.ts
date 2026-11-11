@@ -6,7 +6,7 @@ import { getCommandContents } from './skill-generation.js';
 export interface CommandRemovalResult {
   removed: number;
   /** Project-relative paths that were left in place, with the reason. */
-  kept: Array<{ path: string; reason: 'edited' | 'symlink' | 'unverifiable' }>;
+  kept: Array<{ path: string; reason: 'edited' | 'symlink' | 'unverifiable' | 'outside-project' }>;
 }
 
 function normalizeEol(text: string): string {
@@ -32,7 +32,15 @@ export async function removeUneditedCommandFiles(
 
   for (const workflow of workflows) {
     const relPath = adapter.getFilePath(workflow);
-    const fullPath = FileSystemUtils.resolveProjectArtifactPath(projectPath, relPath);
+    // A path that escapes the project must not abort the rest of the batch.
+    let fullPath: string;
+    try {
+      fullPath = FileSystemUtils.resolveProjectArtifactPath(projectPath, relPath);
+    } catch (error) {
+      const isFsError = typeof (error as NodeJS.ErrnoException).code === 'string';
+      result.kept.push({ path: relPath, reason: isFsError ? 'unverifiable' : 'outside-project' });
+      continue;
+    }
 
     let stat: fs.Stats;
     try {

@@ -100,4 +100,68 @@ describe('removeUneditedCommandFiles', () => {
       syncBuiltinESMExports();
     }
   });
+
+  describe('paths that escape the project', () => {
+    function useAdapterPaths(paths: Record<string, string>) {
+      const real = adapter();
+      return vi.spyOn(CommandAdapterRegistry, 'get').mockReturnValue({
+        ...real,
+        toolId: real.toolId,
+        getFilePath: (id: string) => paths[id] ?? real.getFilePath(id),
+        formatFile: real.formatFile.bind(real),
+      });
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('keeps a parent-directory escape as outside-project and still handles the rest', async () => {
+      const outside = path.join(path.dirname(dir), `${path.basename(dir)}-outside.md`);
+      await fs.writeFile(outside, generated('explore'));
+      try {
+        useAdapterPaths({ explore: `..${path.sep}${path.basename(outside)}` });
+        await write('propose', generated('propose'));
+        const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+        expect(result.kept).toEqual([
+          { path: `..${path.sep}${path.basename(outside)}`, reason: 'outside-project' },
+        ]);
+        expect(result.removed).toBe(1);
+        expect(await exists(outside)).toBe(true);
+        expect(await exists(target('propose'))).toBe(false);
+      } finally {
+        await fs.rm(outside, { force: true });
+      }
+    });
+
+    it('keeps an absolute path as outside-project without aborting the batch', async () => {
+      const outside = path.join(os.tmpdir(), `openspec-cmdrm-abs-${process.pid}.md`);
+      await fs.writeFile(outside, generated('explore'));
+      try {
+        useAdapterPaths({ explore: outside });
+        await write('propose', generated('propose'));
+        const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+        expect(result.kept).toEqual([{ path: outside, reason: 'outside-project' }]);
+        expect(result.removed).toBe(1);
+        expect(await exists(outside)).toBe(true);
+      } finally {
+        await fs.rm(outside, { force: true });
+      }
+    });
+  });
+
+  it('treats a UTF-8 BOM on an otherwise unedited file as unedited', async () => {
+    await write('explore', '﻿' + generated('explore'));
+    const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+    expect(result).toEqual({ removed: 1, kept: [] });
+    expect(await exists(target('explore'))).toBe(false);
+  });
+
+  it('keeps a directory sitting where a command file should be (EISDIR) without throwing', async () => {
+    await fs.mkdir(target('explore'), { recursive: true });
+    const result = await removeUneditedCommandFiles(dir, TOOL, ALL_WORKFLOWS);
+    expect(result.removed).toBe(0);
+    expect(result.kept).toEqual([{ path: adapter().getFilePath('explore'), reason: 'unverifiable' }]);
+    expect(await exists(target('explore'))).toBe(true);
+  });
 });
