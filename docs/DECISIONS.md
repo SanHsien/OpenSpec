@@ -983,19 +983,17 @@ Commit 水位 `0fa4a97`→`579fcac5`（完整 hash 見 `tools/upstream_baseline.
 
 | Issue | 狀態 | 結論 | 證據與觸發條件 |
 | --- | --- | --- | --- |
-| [#2226](https://github.com/Fission-AI/OpenSpec/issues/2226) | OPEN，0 則留言，沒有關聯 PR | 已在 fork 修正（2026-11-11 更新，見下方「追加：#2226 修正做法」；以下為當時的延後判斷） | 回報：Windows 上 `src/utils/shell-detection.ts` 把 `PSModulePath` 當成 PowerShell 的證據，但該變數是機器層級環境變數，cmd.exe 也有，所以 cmd.exe 下 `openspec completion install` 會誤改 PowerShell profile 並以 exit 0 結束。實查本 fork：`src/utils/shell-detection.ts` 第 103–109 行是同一段程式（`if (process.env.PSModulePath) return powershell`，在 `cmd.exe` 分支之前），缺陷成立。不在這輪修：回報者自己列的兩個方向（查父行程、找只有執行中的 PowerShell 才會加進 `PSModulePath` 的使用者路徑）都沒驗證過，且從 PowerShell 啟動的 cmd.exe 會繼承該路徑，沒有可靠訊號；沒有上游修正可移植，自己設計偵測方式屬行為變更，應等上游裁決再對齊。重訪條件：上游合併修正（移植並先紅後綠），或本 fork 有人回報在 cmd.exe 誤裝 profile。已列入 ROADMAP 中期表。 |
+| [#2226](https://github.com/Fission-AI/OpenSpec/issues/2226) | OPEN，0 則留言，沒有關聯 PR | 已採用上游 #2229（2026-11-11 更新，見「2026-11-11：上游增量審查」；以下為當時的延後判斷） | 回報：Windows 上 `src/utils/shell-detection.ts` 把 `PSModulePath` 當成 PowerShell 的證據，但該變數是機器層級環境變數，cmd.exe 也有，所以 cmd.exe 下 `openspec completion install` 會誤改 PowerShell profile 並以 exit 0 結束。實查本 fork：`src/utils/shell-detection.ts` 第 103–109 行是同一段程式（`if (process.env.PSModulePath) return powershell`，在 `cmd.exe` 分支之前），缺陷成立。不在這輪修：回報者自己列的兩個方向（查父行程、找只有執行中的 PowerShell 才會加進 `PSModulePath` 的使用者路徑）都沒驗證過，且從 PowerShell 啟動的 cmd.exe 會繼承該路徑，沒有可靠訊號；沒有上游修正可移植，自己設計偵測方式屬行為變更，應等上游裁決再對齊。重訪條件：上游合併修正（移植並先紅後綠），或本 fork 有人回報在 cmd.exe 誤裝 profile。已列入 ROADMAP 中期表。 |
 
 水位：Issue 水位 `#2220`→`#2226`；commit 與 PR 水位、日期不變；`monitored` 維持 7 筆。水位只表示已讀取並有結論，不表示延後項目已處理。
 
-## 2026-11-11 追加：#2226 與 `.exe` shell 在 fork 修正
+## 2026-11-11 追加：shell-detection 採用上游 #2229，fork 只多一項 `.exe` 比對
 
-獨立覆核確認兩個既有缺陷，皆先寫紅燈測試再修（`test/utils/shell-detection.test.ts`）：
+上游在 2026-11-10 合併 #2229（`5cd4f7f`），用另一種做法修掉同一個 #2226：Windows 上 `PSModulePath` 只在帶有使用者 Documents 底下的 `WindowsPowerShell\Modules`／`PowerShell\Modules`（且不在 Program Files）時才算 PowerShell，否則回報 `cmd.exe`。已知限制由上游自己寫明：從 PowerShell 啟動的 cmd.exe 會被當成 PowerShell。
 
-| 項目 | 做法與理由 |
-| --- | --- |
-| `SHELL=/bin/bash.exe`（Git Bash）被判不支援 | `matchSupportedShell` 比對前以 `/` 或 `\` 切路徑、去掉結尾 `.exe`（大小寫不敏感）；`bash-language-server.exe` 之類仍不算 shell。 |
-| #2226（cmd.exe 被當 PowerShell） | Windows 上 `PSModulePath` 與 `COMSPEC` 都是機器層級變數，cmd.exe 與 PowerShell 都繼承，所以兩者都不能當證據：未設 `SHELL` 時 `detectShell()` 回 `{ shell: undefined, detected: undefined }`，`completion install` 顯示「Could not auto-detect shell. Please specify shell explicitly」並 exit 1，不再改寫 PowerShell profile。曾考慮查父行程名稱，但在 Windows 要多一次行程查詢（`Get-CimInstance`／`wmic`）且從 PowerShell 啟動的 cmd.exe 鏈會誤判，不夠便宜也不夠可靠，未採用。Linux／macOS 的 pwsh 自己設定 `PSModulePath`，維持原行為。 |
-| completion-tip | `detectShell()` 回 undefined 時原本就靜默收掉提示（「install 會 exit 1，指過去是死路」），Windows 使用者因此不再看到提示；要用 completion 就明確寫 `openspec completion install powershell`。 |
+取捨：同一個缺陷上游已有官方修法，fork 先前的「Windows 一律回 undefined」較保守但與上游分岔，所以撤掉，改為整份採用上游版本（`shell-detection.ts`、其測試、`openspec/specs/cli-completion/spec.md`、`.changeset/cmd-exe-not-powershell.md` 與上游一致）。`COMSPEC` 也維持上游行為（回報 `cmd.exe`），不再額外處理。
+
+fork 額外保留的只有上游沒有的一項：`matchSupportedShell` 與未支援 shell 名稱的擷取，比對前以 `/` 或反斜線切路徑並去掉結尾 `.exe`（大小寫不敏感），讓 Git Bash 的 `SHELL=/bin/bash.exe` 與 Windows 路徑被認得；`bash-language-server.exe` 之類仍不算 shell。先寫紅燈測試（對上游實作跑，2 個失敗）再補。重訪條件：上游自己處理 `.exe` 時，刪掉這段並回到純上游。
 
 ## 2026-11-11 追加：command-removal 的產出紀錄（manifest）與邊界修補
 
@@ -1010,3 +1008,34 @@ Commit 水位 `0fa4a97`→`579fcac5`（完整 hash 見 `tools/upstream_baseline.
 | 測試缺口 | 補不依賴 symlink 權限的 `..` 與絕對路徑逃逸、BOM 單獨、EISDIR（目錄佔位）測試。 |
 
 未做：manifest 不提交到哪裡、是否加進 `.gitignore` 沒有硬規定；它是可重建的紀錄，丟失只會讓舊檔回到「保留並警告」。
+
+## 2026-11-11：上游增量審查（commit 579fcac..a959be7、PR #2228–#2233、issue #2227–#2234）
+
+`--strict` 在 11-11 因 2 個新 commit、4 個新 PR、4 個新 issue 轉紅。本 fork 與上游沒有共同祖先，所以 commit 以「內容」處理，不能直接 cherry-pick。
+
+### Commit 逐筆裁決（採用 2）
+
+| Commit | 結論 | 說明 |
+| --- | --- | --- |
+| `5cd4f7f` #2229 | 採用 | 見上一節。以 `git checkout upstream/main --` 取同一批檔，與上游逐位元相同，再疊 `.exe` 比對。 |
+| `a959be7` #2228 | 部分採用 | 解析器部分移植：`parseTaskLines` 把接在任務後、沒有結束段落的行併進描述，尾端的 `\` 硬換行去掉，任務數不變（上游測試區塊原樣搬入 `test/utils/task-progress.test.ts`，7 個先紅後綠）。fork 的 `apply-instructions-tasks` 另補一個端對端測試。未移植：上游同 commit 的 `parseLocatedTaskLines`／`line` 欄位與 `docs-lab/reference` 兩處文字，因為 fork 的 `instructions.ts` 還沒有任務行號這個功能，文件也沒有對應句子；它們屬於先前未採用的行號功能，不在此拆出。 |
+
+### PR 逐筆裁決（採用 2、略過 2）
+
+| PR | 狀態 | 結論 | 說明 |
+| --- | --- | --- | --- |
+| #2228 | MERGED（`a959be7`） | 部分採用 | 見上表。 |
+| #2229 | MERGED（`5cd4f7f`） | 採用 | 見上表。 |
+| #2230 | OPEN（head `79cbe0d`，bot 產生的 release PR，改 `CHANGELOG.md`、`package.json`、刪兩個 changeset） | 略過 | 版本發布，fork 不發布（見 FORK.md 發布邊界）；其中兩個 changeset 的內容已隨 #2228／#2229 的移植進到 `.changeset/`。已讀完整 diff。 |
+| #2233 | OPEN（head `7619b2b`，10 檔，只動 README 與 `docs-lab`／`docs`） | 略過 | 把社群 schema 與專案合成 `docs-lab/community/index.md`，改寫上游英文 README 的社群段；fork 的 `README.md` 是繁中主檔、`README.en.md` 才是上游版，且不維護上游文件站，已讀完整 diff。 |
+
+### Issue 逐筆裁決（採用 0、略過 3、延後 1）
+
+| Issue | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2227 | CLOSED | 已隨 #2228 採用 | 多行任務被截在第一行。 |
+| #2231 | OPEN | 略過 | 申請把 rightcommit 加進上游 Community Showcase，是上游文件內容。 |
+| #2232 | OPEN，0 則留言，沒有關聯 PR | 延後 | 回報：`.agents/skills` 是指向 `.claude/skills` 的 symlink 時，`openspec update` 每跑一次就在 `/opsx:*` 與 `/openspec-*` 之間來回改寫六個 skill。fork 有同一個 `src/core/shared-skill-target.ts`，但重現需要 symlink（本機沒有 symlink 權限，現有 symlink 測試都會 skip），回報者也自述沒有追到根因。觸發條件：上游合併修正，或有人回報在 fork 看到來回改寫；移植時要在可建 symlink 的環境先紅後綠。已列入 ROADMAP 中期表。 |
+| #2234 | OPEN | 略過 | 上游 CI 對純文件 PR 略過測試的提案；fork 的 CI 與必要檢查是自己的。 |
+
+水位：commit `579fcac5`→`a959be77`；PR 水位 `#2225`→`#2233`；Issue 水位 `#2226`→`#2234`；日期 `2026-11-11`；`monitored` 維持 7 筆（`--strict` 回報無漂移）。水位只表示已讀取並有結論，不表示延後項目已處理。

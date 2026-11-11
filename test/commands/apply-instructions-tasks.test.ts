@@ -115,4 +115,25 @@ describe('generateApplyInstructions task list', () => {
     expect(instructions.progress).toEqual({ total: 2, complete: 1, remaining: 1 });
     expect(instructions.state).toBe('ready');
   });
+  it('lists a wrapped task with its full text (#2227)', async () => {
+    writeTasks(
+      [
+        '# Tasks',
+        '## 1. Repro',
+        '- [ ] 1.1 Implement the widget factory so it accepts a null config and',
+        '      returns a default widget instead of throwing',
+        '- [ ] 1.2 Second task \\',
+        '      with a backslash break',
+        '',
+      ].join('\n')
+    );
+
+    const instructions = await generateApplyInstructions(tempDir, 'my-change');
+
+    expect(instructions.tasks.map(({ description }) => description)).toEqual([
+      '1.1 Implement the widget factory so it accepts a null config and returns a default widget instead of throwing',
+      '1.2 Second task with a backslash break',
+    ]);
+    expect(instructions.progress).toEqual({ total: 2, complete: 0, remaining: 2 });
+  });
 });
