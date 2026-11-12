@@ -1044,3 +1044,33 @@ fork 額外保留的只有上游沒有的一項：`matchSupportedShell` 與未�
 - `b2ccf57f` 不慎把 `test/commands/spec.test.ts`、`validate.test.ts` 跑出來的 `test-spec-command-tmp/`、`test-validate-command-tmp/` 共 10 檔提交進來。已從版控移除、`.gitignore` 加 `test-*-command-tmp/`，並讓兩個測試改用 `os.tmpdir()` 底下的 `mkdtemp`，跑測試不再弄髒工作樹。
 
 水位：commit `579fcac5`→`a959be77`；PR 水位 `#2225`→`#2233`；Issue 水位 `#2226`→`#2234`；日期 `2026-11-11`；`monitored` 維持 7 筆（`--strict` 回報無漂移）。水位只表示已讀取並有結論，不表示延後項目已處理。
+
+## 2026-11-13：上游增量審查（commit a959be7..d12c281、PR #2237–#2241、issue #2236、#2239）
+
+`--strict` 在 11-13 因 4 個新 commit、3 個新 PR、2 個新 issue 轉紅（11-09 那次紅燈的 #2217–#2219 已在 11-11 審查中收掉，該次 run 為舊結果）。本 fork 與上游沒有共同祖先，所以 commit 以「內容」處理，不 cherry-pick。
+
+### Commit 逐筆裁決（採用 0、略過 3、延後 1）
+
+| Commit | 結論 | 說明與觸發條件 |
+| --- | --- | --- |
+| `f636b47` #2237 | 略過 | 上游 CI 對純文件 PR 略過 CLI／binary 測試。fork 的必要檢查是自己的（與 #2234 同一判準）。 |
+| `d97d7e2` #2223 | 延後 | `feat(skills)!`：143 檔、+11935／-4533，技能改為只裝進單一 `.agents/skills`。這是破壞性變更，會改變使用者既有的技能安裝位置，fork 另有 `src/core/shared-skill-target.ts` 的分流邏輯。屬於方向性決定，需維護者先決定是否採用。重訪條件：維護者決定 skills 安裝模式，或上游 #2241 合併。 |
+| `1e0f4c5` #2240 | 略過 | 修補上游 release PR 會刪掉的 changeset 測試。fork 沒有 `test/upgrade-to-2-docs-claims.test.ts`，此 commit 不適用。 |
+| `d12c281` #2230 | 略過 | Version Packages（版本發布 bot）。fork 不發布（見 FORK.md 發布邊界），同 #2230 先前裁決。 |
+
+### PR 逐筆裁決（採用 0、略過 2、延後 1）
+
+| PR | 狀態 | 結論 | 說明 |
+| --- | --- | --- | --- |
+| #2237 | MERGED（`f636b47`） | 略過 | 見上表。 |
+| #2240 | MERGED（`1e0f4c5`） | 略過 | 見上表。 |
+| #2241 | OPEN | 延後 | 與 `d97d7e2` 同一方向（技能透過 skills 套件每台機器裝一次）。跟隨上表延後項目一起裁決。 |
+
+### Issue 逐筆裁決（採用 0、略過 2）
+
+| Issue | 結論 | 說明 |
+| --- | --- | --- |
+| #2236 | 略過 | 社群專案清單加入 living-architecture，屬上游文件內容。 |
+| #2239 | 略過 | Showcase 新增 SpecTater，屬上游文件內容（同 #2231 判準）。 |
+
+水位：commit `a959be77`→`d12c2817`；PR 水位 `#2233`→`#2241`；Issue 水位 `#2234`→`#2239`；日期 `2026-11-13`；`monitored` 維持 7 筆（`--strict` 回報無漂移）。水位只表示已讀取並有結論，延後項目仍待維護者決定。
