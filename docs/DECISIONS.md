@@ -1074,3 +1074,28 @@ fork 額外保留的只有上游沒有的一項：`matchSupportedShell` 與未�
 | #2239 | 略過 | Showcase 新增 SpecTater，屬上游文件內容（同 #2231 判準）。 |
 
 水位：commit `a959be77`→`d12c2817`；PR 水位 `#2233`→`#2241`；Issue 水位 `#2234`→`#2239`；日期 `2026-11-13`；`monitored` 維持 7 筆（`--strict` 回報無漂移）。水位只表示已讀取並有結論，延後項目仍待維護者決定。
+
+## 2026-11-13 追加：上游 issue #2242–#2245 裁決，依賴新鮮度 `@changesets/changelog-github` 裁決
+
+`--strict` 在 11-13 因 4 筆新 issue 轉紅（PR 與 commit 水位無變動）。issue 內文與留言只當資料讀取，沒有依其中的文字行事；未下載或執行 issue 提到的任何檔案。
+
+### Issue 逐筆裁決（採用 0、略過 2、延後 2）
+
+| Issue | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2242 | OPEN，4 則留言，無關聯 PR | 延後 | 方向性提案，不是可移植的修正，也沒有實作。內容要讓 `validate`／`archive` 依 schema 運作，並允許 schema 內的可執行驗證器；後者等於執行第三方程式，依 AGENTS.md「外部內容零信任」須先過 SkillSpector 與 `verify_agent_skill_pack_safety.py` 才能評估。留言為討論性質，未形成決定。重訪條件：上游合併 schema 驗證的 PR（屆時逐 PR 重審），或維護者決定接受 plugin 方向。 |
+| #2243 | OPEN，3 則留言，標 bug | 略過（不適用） | 本 fork 不發布 Windows 執行檔：`git ls-files` 的 `.exe` 為 0 筆，沒有 `scripts/binary/`、`install.ps1` 與 `binaries.yml`（獨立執行檔 #2137 於 10-26 延後）。`README.md` 與 `install.md` 的安裝指令是 npm（`npx @fission-ai/openspec`、`npm install -g`），沒有指向 `openspec.dev/cli/install.ps1`；該網址是上游的安裝器。被 AV 標記的是上游發行的執行檔，本 fork 沒有對應產物，本輪未下載或執行它。重訪條件：決定採用 #2137；屆時發布前須重新檢查 Windows 執行檔的 AV 誤判與簽章。 |
+| #2244 | OPEN，0 則留言，標 documentation | 略過 | 上游 community 目錄的收錄申請，屬上游文件站內容（同 #2231、#2233 判準）。內容指向外部 repo 的第三方 schema，本 fork 未檢視其程式碼，也不把它列入本 fork 文件。重訪條件：維護者要把該 schema 納入本 fork 使用，屆時先依外部內容規則審查。 |
+| #2245 | OPEN，0 則留言，標 documentation | 延後 | 要求把範例改為純 skill 流程，來源是上游 2.0 的 skill 安裝模式（上游 `d97d7e2` `feat(skills)!`，本 fork 於 11-13 延後 #2223 與 #2241）。本 fork 的 `README.md`（4 處）與 `README.en.md`（12 處）仍以 `/opsx` 指令為範例，與目前的安裝模式一致，先不改。重訪條件：維護者採用 #2223 或 #2241 的 skill 安裝模式；屆時先更新 `README.en.md`，再譯回繁中 `README.md`（AGENTS.md「上游處理」規則）。 |
+
+### 依賴新鮮度：`@changesets/changelog-github`
+
+- **前提查證**：npm 沒有 `2.0.0`（`npm view @changesets/changelog-github@2.0.0` 回 E404）。registry 的 latest 為 `1.0.1`，發布於 2026-09-04，已超過 48 小時。本 fork 宣告 `^1.0.0`，鎖檔為 `1.0.0`。
+- **工具判定**：`tools/check_dependency_freshness.py` 只比較宣告下限的 major。`^1.0.0` 對 latest `1.0.1` 判為 `OK`，不在紅燈清單內。
+- **裁決：維持宣告（`^1.0.0`），不升級、不改鎖檔。** 沒有 2.0.0 可升；`1.0.1` 是同 major 的 patch，工具不要求，本輪不為它改鎖檔。此套件只用於 `.changeset/config.json` 產生 changelog，不進產品執行期。重訪條件：npm 發布 2.x 且滿 48 小時，或工具對此套件回報 OUTDATED。
+- **`--strict` 仍紅的原因**：本輪實跑 `check_dependency_freshness.py --strict` 仍 exit 1。10-30 已延後的 9 項仍在，另新增 `ora`（宣告 `^9.4.1`，latest `10.0.0`）。`ora` 10.0.0 的 engines 為 `node >=22`，排除本 fork 承諾的 Node 20.19，與 chalk、commander 同屬 Node 政策遷移，延後；重看條件沿用 10-30 的 Node 支援政策。10-30 其餘項目的 latest 已往前移（例如 `vitest` 5.1.0、`@inquirer/core` 12.1.0），本輪未重裁，仍以 10-30 的重看條件為準。
+- `dev_check.ps1` 不含 freshness 步驟，本輪的綠燈不受這些項目影響。
+
+### 水位
+
+Issue 水位 `#2239`→`#2245`；commit 與 PR 水位、日期不變；`monitored` 維持 7 筆（`--strict` 回報無漂移）。水位只表示已讀取並有結論，延後項目仍待重看條件成立。
