@@ -1099,3 +1099,23 @@ fork 額外保留的只有上游沒有的一項：`matchSupportedShell` 與未�
 ### 水位
 
 Issue 水位 `#2239`→`#2245`；commit 與 PR 水位、日期不變；`monitored` 維持 7 筆（`--strict` 回報無漂移）。水位只表示已讀取並有結論，延後項目仍待重看條件成立。
+
+## 2026-11-14：上游增量審查（commit `ea635dd`、PR #2246、issue #2247）
+
+`--strict` 在 11-14 因 1 個新 commit、1 個新 PR、1 個新 issue 轉紅。issue 內文只當資料讀取，沒有依其中文字行事。本 fork 與上游沒有共同祖先，commit 以「內容」處理。
+
+### Commit／PR 逐筆裁決（採用 0、略過 1）
+
+| 項目 | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| `ea635dd`（PR #2246） | MERGED | 略過（不適用） | 修補 #2243：Windows 執行檔改在 Windows runner 建置，並標上 OpenSpec 名稱、發行者與版本。觸及的 `.github/workflows/binaries.yml`、`scripts/binary/build.mjs`、`scripts/binary/install.ps1` 在本 fork 都不存在（`.github/workflows` 無 `binaries.yml`，無 `scripts/binary/`），獨立執行檔 #2137 於 10-26 延後，與 11-13 對 #2243 的裁決相同。此 commit 另把 `LICENSE` 與 `package.json` 的著作權人／作者改為上游法人名稱；那是上游發行主體的聲明，本 fork 維持原有的 `OpenSpec Contributors`，不改。重訪條件：決定採用 #2137；屆時整組 Windows 標記與 CI 檢查一併移植。 |
+
+### Issue 逐筆裁決（採用 0、略過 0、延後 1）
+
+| Issue | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2247 | OPEN，0 則留言，標 enhancement／needs-triage，無關聯 PR | 延後 | 功能提案：`openspec archive --dry-run`，在不寫入下回報 archive 是否會成功（涵蓋 `validate --strict` 沒檢查的合併後規格檢查）。本 fork 的 `src` 沒有任何 `dry-run` 實作，上游也還沒有 PR，沒有可移植的內容。重訪條件：上游合併實作它的 PR（屆時逐 PR 重審），或維護者要在本 fork 先做這個能力。 |
+
+### 水位
+
+commit `d12c2817`→`ea635dd2`；PR 水位 `#2241`→`#2246`；Issue 水位 `#2245`→`#2247`；日期 `2026-11-14`；`monitored` 維持 7 筆。水位只表示已讀取並有結論，延後項目仍待重看條件成立。

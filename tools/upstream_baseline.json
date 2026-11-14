@@ -1,10 +1,10 @@
 {
   "repo": "https://github.com/Fission-AI/OpenSpec.git",
   "branch": "main",
-  "reviewed_through": "d12c2817776779e06891d68230773b3bb673b106",
-  "reviewed_date": "2026-11-13",
-  "reviewed_pr_through": 2241,
-  "reviewed_issue_through": 2245,
+  "reviewed_through": "ea635dd255f8686dcf48626bbcbe0e3fd59b6067",
+  "reviewed_date": "2026-11-14",
+  "reviewed_pr_through": 2246,
+  "reviewed_issue_through": 2247,
   "monitored": [
     {
       "item": "pr#2168",
