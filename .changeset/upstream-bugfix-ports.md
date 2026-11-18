@@ -12,3 +12,5 @@
 - The main-spec structure check reads `###Requirement:` (no space) the same way the requirement reader does.
 - `openspec validate` exits 1 when `openspec/config.yaml` is not valid YAML instead of passing while every rule in it is ignored.
 - `## Purpose ##`, `## Why ##`, `## What Changes ##` and `## Requirements ##` (CommonMark closing run) are read like their unclosed forms.
+- Retiring a capability no longer refuses a requirement statement or scenario line that starts with a tag-like word such as `<args>`; real HTML blocks are still named and refused (upstream #2266, issue #2211).
+- A main spec created by archive has a blank line after `## Purpose`, so it passes Prettier and markdownlint MD022 as written (upstream #2267, issue #2260).

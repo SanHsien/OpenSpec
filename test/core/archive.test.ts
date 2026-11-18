@@ -729,6 +729,11 @@ Then expected result happens`;
       expect(updatedContent).toContain('# test-capability Specification');
       expect(updatedContent).toContain('## Purpose');
       expect(updatedContent).toContain(`created by archiving change ${changeName}`);
+      // A blank line on both sides of every heading, so a new main spec passes
+      // Prettier and markdownlint MD022 as written (#2260).
+      expect(updatedContent).toContain(
+        `## Purpose\n\nTBD - created by archiving change ${changeName}. Update Purpose after archive.\n\n## Requirements\n`
+      );
       expect(updatedContent).toContain('## Requirements');
       expect(updatedContent).toContain('### Requirement: The system SHALL provide test capability');
       expect(updatedContent).toContain('#### Scenario: Basic test');
@@ -1205,7 +1210,9 @@ The system SHALL award loyalty points on each completed order.
 
       const mainSpecPath = path.join(tempDir, 'openspec', 'specs', 'loyalty', 'spec.md');
       const updatedContent = await fs.readFile(mainSpecPath, 'utf-8');
-      expect(updatedContent).toContain('Tracks loyalty points earned and redeemed across the storefront.');
+      expect(updatedContent).toContain(
+        '## Purpose\n\nTracks loyalty points earned and redeemed across the storefront.\n\n## Requirements\n'
+      );
       expect(updatedContent).not.toContain('TBD - created by archiving change');
       expect(updatedContent).toContain('### Requirement: Earn Points');
     });
@@ -4910,6 +4917,91 @@ The system SHALL do the thing differently.
       expect(process.exitCode).toBe(1);
       await expect(fs.readFile(path.join(mainSpecDir, 'spec.md'), 'utf-8')).resolves.toBe(spec);
       expect(console.log).toHaveBeenCalledWith(expect.stringContaining(named));
+    });
+
+    it.each([
+      {
+        what: 'a wrapped statement',
+        statement: ['The system SHALL accept', '<args> and pass them on.'],
+        scenario: ['- **WHEN** it runs', '- **THEN** the args are passed'],
+      },
+      {
+        what: 'a statement that opens with a tag-like word',
+        statement: ['<args> are accepted and passed on, as the system SHALL do.'],
+        scenario: ['- **WHEN** it runs', '- **THEN** the args are passed'],
+      },
+      {
+        what: 'a wrapped scenario bullet',
+        statement: ['The system SHALL provide a legacy layer to existing consumers.'],
+        scenario: ['- **WHEN** it runs with', '<args> as given', '- **THEN** the args are passed'],
+      },
+    ])('retires a spec when $what has a line starting with `<` (#2211)', async ({ what, statement, scenario }) => {
+      // Only HTML blocks of CommonMark kinds 1-6 may interrupt a paragraph, and
+      // `<args>` opens none, so the line is part of the sentence above it.
+      const changeName = `retire-angle-${what.split(' ').slice(1, 3).join('-')}`;
+      await createChange(changeName, 'legacy-layer', REMOVE_ALL);
+      const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'legacy-layer');
+      await fs.mkdir(mainSpecDir, { recursive: true });
+      await fs.writeFile(
+        path.join(mainSpecDir, 'spec.md'),
+        [
+          '# legacy-layer Specification',
+          '',
+          '## Purpose',
+          PURPOSE,
+          '',
+          '## Requirements',
+          '',
+          '### Requirement: The system SHALL provide a legacy layer',
+          ...statement,
+          '',
+          '#### Scenario: Layer is available',
+          ...scenario,
+          '',
+        ].join('\n')
+      );
+
+      await archiveCommand.execute(changeName, { yes: true });
+
+      await expect(fs.access(path.join(mainSpecDir, 'spec.md'))).rejects.toThrow();
+    });
+
+    it.each([
+      { what: 'a div in the statement', statement: ['The system SHALL provide a legacy layer.', '<div>escrow keys live in the legacy vault</div>'], scenario: [] },
+      { what: 'a comment in the statement', statement: ['The system SHALL provide a legacy layer.', '<!-- escrow keys live in the legacy vault -->'], scenario: [] },
+      { what: 'a standalone tag opening the statement', statement: ['<escrow-note>', 'The system SHALL provide a legacy layer.'], scenario: [] },
+      { what: 'a details block under the bullets', statement: ['The system SHALL provide a legacy layer.'], scenario: ['<details>escrow keys live in the legacy vault</details>'] },
+    ])('still refuses $what (#2211)', async ({ what, statement, scenario }) => {
+      // An HTML block is the author's own content, not the statement or a
+      // scenario, so deleting the file would take it unmentioned.
+      const changeName = `retire-html-${what.split(' ')[1]}`;
+      await createChange(changeName, 'legacy-layer', REMOVE_ALL);
+      const mainSpecDir = path.join(tempDir, 'openspec', 'specs', 'legacy-layer');
+      await fs.mkdir(mainSpecDir, { recursive: true });
+      const spec = [
+        '# legacy-layer Specification',
+        '',
+        '## Purpose',
+        PURPOSE,
+        '',
+        '## Requirements',
+        '',
+        '### Requirement: The system SHALL provide a legacy layer',
+        ...statement,
+        '',
+        '#### Scenario: Layer is available',
+        '- **WHEN** a consumer imports the layer',
+        '- **THEN** the legacy layer is available',
+        ...scenario,
+        '',
+      ].join('\n');
+      await fs.writeFile(path.join(mainSpecDir, 'spec.md'), spec);
+
+      await archiveCommand.execute(changeName, { yes: true });
+
+      expect(process.exitCode).toBe(1);
+      await expect(fs.readFile(path.join(mainSpecDir, 'spec.md'), 'utf-8')).resolves.toBe(spec);
+      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('escrow'));
     });
 
     it.each([

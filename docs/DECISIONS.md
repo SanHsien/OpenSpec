@@ -1119,3 +1119,60 @@ Issue 水位 `#2239`→`#2245`；commit 與 PR 水位、日期不變；`monitore
 ### 水位
 
 commit `d12c2817`→`ea635dd2`；PR 水位 `#2241`→`#2246`；Issue 水位 `#2245`→`#2247`；日期 `2026-11-14`；`monitored` 維持 7 筆。水位只表示已讀取並有結論，延後項目仍待重看條件成立。
+
+## 2026-11-18：上游增量審查（commit ea635dd..f085c85、PR #2249–#2277、issue #2248–#2276）
+
+`--strict` 在 11-18 因 6 個新 commit、20 個新 PR、8 個新 issue 轉紅，連帶 Dependabot #7（website `next` 16.4.5 安全修正）的 Windows Dev Check 也紅。issue 與 PR 內文只當資料讀取，沒有依其中文字行事。本 fork 與上游沒有共同祖先，commit 以「內容」處理。20 個 PR 的 diff 都掃過 `eval(`、`new Function(`、`globalThis`、200 字以上長串、`\S\s{40,}\S`、零寬與雙向控制字元、`curl | sh`、`iex`、`dangerously`，結果為 0；`child_process` 只出現在 #2256 的測試檔。移植的那行 487 字正規式是 CommonMark 區塊標籤名稱清單，可逐字讀。
+
+### Commit 逐筆裁決（採用 0、略過 4、延後 2）
+
+| 項目 | 結論 | 說明與觸發條件 |
+| --- | --- | --- |
+| `85e84ce`（#2257） | 延後 | chalk `^5.6.2`→`^6.0.1` 的 engines 為 Node >=22，沿用 11-08 Node 支援政策的重看條件；vite 8.3.8、typescript-eslint 8.72.2、brace-expansion 5.0.13 是上游 lock 的小版更新，fork 在 vite 7.3.7，brace-expansion 5.0.12 已滿足 override。 |
+| `9b0a156`（#2250） | 略過 | pnpm/action-setup 6.1.0→6.1.1。fork 的 Actions 釘版由自己的 Dependabot 管，`binaries.yml` 不存在。 |
+| `82a0be5`（#2253） | 略過 | website 相依 7 項小版更新。fork 的 `next` 警示（GHSA-mfr8-8qww-v76h）由 fork PR #7 另行處理。 |
+| `ee9038a`（#2241） | 延後 | 技能改由 `skills@1.8.1` 套件安裝並新增 `--global`，engines 升至 `>=22.20.0`，執行期自上游 repo 以 git 抓取技能。建在已延後的 `d97d7e2`（#2223）之上，fork 沒有 `src/core/shared/shared-skill-install.ts` 等基底檔。重訪條件：維護者決定採用 2.0 技能安裝模式。 |
+| `8bd4b35`（#2258） | 略過 | Version Packages，fork 不發布。 |
+| `f085c85`（#2259） | 略過 | 上游文件站側欄調整，fork 沒有 `docs-lab/help/upgrade-to-2-1.md`。 |
+
+### PR 逐筆裁決（採用 2、略過 13、延後 5）
+
+| PR | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2249 | CLOSED | 略過 | brace-expansion 5.0.13，被 #2257 取代。 |
+| #2250 | MERGED（`9b0a156`） | 略過 | 見上表。 |
+| #2251 | CLOSED | 略過 | 開發相依 2 項，被 #2257 取代。 |
+| #2252 | CLOSED | 略過 | chalk 6.0.1，被 #2257 取代。 |
+| #2253 | MERGED（`82a0be5`） | 略過 | 見上表。 |
+| #2256 | MERGED 進 `claude/global-skills-install`（非 main） | 延後 | update 時詢問是否改用全域技能，內容已併入 `ee9038a`，跟隨上表延後項目一起裁決。 |
+| #2257 | MERGED（`85e84ce`） | 延後 | 見上表。 |
+| #2258 | MERGED（`8bd4b35`） | 略過 | 見上表。 |
+| #2259 | MERGED（`f085c85`） | 略過 | 見上表。 |
+| #2261 | CLOSED | 略過 | router skill 初版，被 #2262 取代。 |
+| #2262 | OPEN（head `d7127a5`，57 檔 +629/-225） | 延後 | 新增 router skill 並改寫各 skill 文字，建在 2.x 技能模式之上。重訪條件：維護者採用 2.0 技能安裝模式，或上游合併後逐 PR 重審。 |
+| #2263 | OPEN（head `078f8be`，2 檔 +50/-0） | 略過 | 只動上游文件站的 stores／worktrees 說明，無程式碼。 |
+| #2264 | OPEN（head `a80f655`，5 檔 +76/-8） | 延後 | Homebrew／Nix 安裝不再被建議 `npm install -g`。fork 的 `src/core/version-check.ts` 沒有這兩種判別，但 fork 不經 Homebrew 發布，`src/commands/install-standalone.ts` 也不存在；未重現。已釘入 `monitored`。重訪條件：上游合併，屆時只移植 `version-check.ts` 部分。 |
+| #2265 | OPEN（head `7597cf6`，3 檔 +135/-9） | 略過（不適用） | MODIFIED 需求超過長度時在 strict 警告。前提是 #1976 的 delta 長度警告，本 fork 未採用：實測 600 字的 MODIFIED 與 ADDED 在 `Validator(true)` 都通過，archive 也成功。重訪條件：決定採用 #1976。 |
+| #2266 | OPEN（head `bd8a20c`，3 檔 +136/-9） | 採用 | 修補 #2211。fork 實測重現：`retire_capabilities` 下，換行後以 `<args>` 開頭的需求句或情境行被當成未說明內容而拒絕（3 種寫法皆 exit 1）。移植 `src/core/specs-apply.ts` 的修正與上游 7 個測試；真正的 HTML 區塊（`<div>`、註解、獨立標籤、`<details>`）仍會拒絕。已釘入 `monitored`。 |
+| #2267 | OPEN（head `820ef1d`，3 檔 +15/-3） | 採用 | 修補 #2260。fork 的 `buildSpecSkeleton` 在 `## Purpose` 後沒有空行（MD022）。移植一行修正與 2 個測試斷言；上游第 3 個斷言對應的測試本 fork 沒有，不搬。已釘入 `monitored`。 |
+| #2269 | OPEN（head `2dbe213`，5 檔 +133/-3） | 略過（不適用） | update 找出 `npx skills` 裝進專案的技能。fork 沒有 skills 套件與其 lock 檔的任何處理。重訪條件同 `ee9038a`。 |
+| #2273 | OPEN（head `3f3b43a`，4 檔 +288/-2） | 略過（不適用） | 修補 #2272／#2255。fork 沒有「Text above the first `## ` section」警告：實測開頭帶 frontmatter 的 delta 在 strict 回 valid、0 則 issue。重訪條件：採用上游的 unapplied-content 檢查。 |
+| #2274 | OPEN（head `a14adf1`，36 檔 +491/-207） | 略過（不適用） | 修補 #2271（2.1.0 的 continue skill 少了交接語句）。fork 的 `src/core/templates/workflows/continue-change.ts` 仍有交接語句，缺陷不存在。 |
+| #2277 | OPEN（head `e6ee4af`，6 檔 +81/-18） | 延後 | 修補 #2276。缺陷在 fork 存在：`skills/openspec-archive-change/SKILL.md` 與 `archive-change.ts` 都在步驟 4 同步主規格、步驟 5 才檢查封存目標。上游 diff 套不上 fork 已分岔的範本，還需重算 3 個 parity hash，且 PR 尚未合併。已釘入 `monitored`。重訪條件：上游合併或 head 變動；屆時以 fork 的範本文字重寫。 |
+
+### Issue 逐筆裁決（採用 1、略過 4、延後 3）
+
+| Issue | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2248 | OPEN，標 enhancement | 延後 | 提案讓 MODIFIED 能改名或刪除情境（`**DELETED**` 關鍵字），沒有關聯 PR。重訪條件：上游合併實作它的 PR。 |
+| #2254 | CLOSED（completed） | 略過 | `view`／`list` 的 `--worktrees` 提案，已關閉，本視窗內沒有合併的實作；相關只有文件 PR #2263。 |
+| #2255 | OPEN，標 bug | 略過（不適用） | 與 #2272 同一缺陷，見 #2273。 |
+| #2260 | OPEN | 採用 | 見 #2267。 |
+| #2271 | OPEN，標 bug | 略過（不適用） | 見 #2274。 |
+| #2272 | OPEN，標 bug | 略過（不適用） | 見 #2273。 |
+| #2275 | OPEN | 延後 | `openspec/` 是 symlink 時 init 失敗。fork 的 `src/core/init.ts` 有同一個 `assertProjectArtifactPath` 呼叫，未重現（Windows 建 symlink 需權限）；沒有關聯 PR，symlink 支援仍在 ROADMAP 的重評項目內。重訪條件：上游合併修正，或該 ROADMAP 項目開工。 |
+| #2276 | OPEN，標 bug | 延後 | 見 #2277。 |
+
+### 水位
+
+commit `ea635dd2`→`f085c850`；PR 水位 `#2246`→`#2277`；Issue 水位 `#2247`→`#2276`；日期 `2026-11-18`；`monitored` 由 7 筆增為 11 筆（新增 #2264、#2266、#2267、#2277）。水位只表示已讀取並有結論，延後項目仍待重看條件成立。
