@@ -1,7 +1,7 @@
 import { asStatus } from '../commands/shared-output.js';
 import { Command, Option } from 'commander';
 import { createRequire } from 'module';
-import ora from 'ora';
+import { createSpinner } from '../utils/spinner.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, promises as fs } from 'fs';
@@ -84,7 +84,7 @@ function failWithError(
     process.exitCode = 1;
     return;
   }
-  ora().fail(`Error: ${(error as Error).message}`);
+  createSpinner().fail(`Error: ${(error as Error).message}`);
   // Resolution and store errors carry a pasteable fix - never drop it.
   const fix = (error as { diagnostic?: { fix?: string } }).diagnostic?.fix;
   if (fix) {

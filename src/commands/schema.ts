@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
-import ora from 'ora';
+import { createSpinner } from '../utils/spinner.js';
 import { stringify as stringifyYaml, parseDocument, isMap } from 'yaml';
 import {
   getSchemaDir,
@@ -798,7 +798,7 @@ export function registerSchemaCommand(program: Command): void {
     .option('--json', 'Output as JSON')
     .option('--force', 'Overwrite existing destination')
     .action(async (source: string, name?: string, options?: { json?: boolean; force?: boolean }) => {
-      const spinner = options?.json ? null : ora();
+      const spinner = options?.json ? null : createSpinner();
 
       try {
         const projectRoot = process.cwd();
@@ -1061,7 +1061,7 @@ export function registerSchemaCommand(program: Command): void {
         force?: boolean;
       }
     ) => {
-      const spinner = options?.json ? null : ora();
+      const spinner = options?.json ? null : createSpinner();
 
       try {
         const projectRoot = process.cwd();

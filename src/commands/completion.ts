@@ -1,4 +1,4 @@
-import ora from 'ora';
+import { createSpinner } from '../utils/spinner.js';
 import { CompletionFactory } from '../core/completions/factory.js';
 import { COMMAND_REGISTRY } from '../core/completions/command-registry.js';
 import { detectShell, SupportedShell } from '../utils/shell-detection.js';
@@ -125,7 +125,7 @@ export class CompletionCommand {
     const generator = CompletionFactory.createGenerator(shell);
     const installer = CompletionFactory.createInstaller(shell);
 
-    const spinner = ora(`Installing ${shell} completion script...`).start();
+    const spinner = createSpinner(`Installing ${shell} completion script...`).start();
 
     try {
       // Generate the completion script
@@ -234,7 +234,7 @@ export class CompletionCommand {
       }
     }
 
-    const spinner = ora(`Uninstalling ${shell} completion script...`).start();
+    const spinner = createSpinner(`Uninstalling ${shell} completion script...`).start();
 
     try {
       const result = await installer.uninstall();

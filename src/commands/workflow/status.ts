@@ -4,7 +4,7 @@
  * Displays artifact completion status for a change.
  */
 
-import ora from 'ora';
+import { createSpinner } from '../../utils/spinner.js';
 import chalk from 'chalk';
 import { getChangeDir } from '../../core/planning-home.js';
 import {
@@ -74,7 +74,7 @@ export async function statusCommand(options: StatusOptions): Promise<void> {
     return;
   }
 
-  const spinner = options.json ? undefined : ora('Loading change status...').start();
+  const spinner = options.json ? undefined : createSpinner('Loading change status...').start();
 
   try {
     const planningHome = toPlanningHome(root);

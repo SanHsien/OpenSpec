@@ -5,7 +5,7 @@
  * Includes both artifact instructions and apply instructions.
  */
 
-import ora from 'ora';
+import { createSpinner } from '../../utils/spinner.js';
 import path from 'path';
 import * as fs from 'fs';
 import {
@@ -118,7 +118,7 @@ export async function instructionsCommand(
     return;
   }
 
-  const spinner = options.json ? undefined : ora('Generating instructions...').start();
+  const spinner = options.json ? undefined : createSpinner('Generating instructions...').start();
 
   try {
     const planningHome = toPlanningHome(root);
@@ -640,7 +640,7 @@ export async function applyInstructionsCommand(options: ApplyInstructionsOptions
     return;
   }
 
-  const spinner = options.json ? undefined : ora('Generating apply instructions...').start();
+  const spinner = options.json ? undefined : createSpinner('Generating apply instructions...').start();
 
   try {
     const planningHome = toPlanningHome(root);
@@ -776,7 +776,7 @@ export async function archiveInstructionsCommand(
     return;
   }
 
-  const spinner = options.json ? undefined : ora('Loading archive inputs...').start();
+  const spinner = options.json ? undefined : createSpinner('Loading archive inputs...').start();
 
   try {
     const changeName = await validateChangeExists(

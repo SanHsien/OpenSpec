@@ -7,7 +7,7 @@
 
 import path from 'path';
 import chalk from 'chalk';
-import ora from 'ora';
+import { createSpinner } from '../utils/spinner.js';
 import * as fs from 'fs';
 import { createRequire } from 'module';
 import { removeUneditedCommandFiles, recordGeneratedCommandFiles, formatKeptCommandWarning } from './shared/command-removal.js';
@@ -587,7 +587,7 @@ export class InitCommand {
   }
 
   private async performLegacyCleanup(projectPath: string, detection: LegacyDetectionResult): Promise<void> {
-    const spinner = ora('Cleaning up legacy files...').start();
+    const spinner = createSpinner('Cleaning up legacy files...').start();
 
     const result = await cleanupLegacyArtifacts(projectPath, detection);
 
@@ -942,7 +942,7 @@ export class InitCommand {
 
     // Process each tool
     for (const tool of tools) {
-      const spinner = ora(`Setting up ${tool.name}...`).start();
+      const spinner = createSpinner(`Setting up ${tool.name}...`).start();
 
       try {
         const shouldGenerateSkills = shouldGenerateSkillsForTool(tool.value, delivery);
@@ -1443,7 +1443,7 @@ export class InitCommand {
   }
 
   private startSpinner(text: string) {
-    return ora({
+    return createSpinner({
       text,
       stream: process.stdout,
       color: 'gray',

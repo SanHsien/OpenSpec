@@ -4,7 +4,7 @@
  * Shows resolved template paths for all artifacts in a schema.
  */
 
-import ora from 'ora';
+import { createSpinner } from '../../utils/spinner.js';
 import path from 'path';
 import {
   resolveSchema,
@@ -34,7 +34,7 @@ export interface TemplateInfo {
 // -----------------------------------------------------------------------------
 
 export async function templatesCommand(options: TemplatesOptions): Promise<void> {
-  const spinner = options.json ? undefined : ora('Loading templates...').start();
+  const spinner = options.json ? undefined : createSpinner('Loading templates...').start();
 
   try {
     const projectRoot = process.cwd();

@@ -7,7 +7,7 @@
  * this command.
  */
 
-import ora from 'ora';
+import { createSpinner } from '../../utils/spinner.js';
 import path from 'path';
 import { createChange, validateChangeName } from '../../utils/change-utils.js';
 import { formatChangeLocation } from '../../core/planning-home.js';
@@ -87,7 +87,7 @@ function printCreatedChangeHuman(
 }
 
 export async function newChangeCommand(name: string | undefined, options: NewChangeOptions): Promise<void> {
-  const spinner = options.json ? undefined : ora();
+  const spinner = options.json ? undefined : createSpinner();
 
   try {
     if (!name) {
