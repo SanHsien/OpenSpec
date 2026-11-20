@@ -183,9 +183,19 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
    - `excludedDeltas`: conflict deltas from confirmed changes excluded because their implementation is missing
    - A single change can have both included and excluded delta specs. Keep the decision per delta; do not collapse it into a per-change sync flag.
 
+   **Check every archive target first:** For each confirmed change, record its
+   `<target-name>`: use the change name as-is when it already starts with a
+   `YYYY-MM-DD-` prefix; otherwise prepend the current date as
+   `YYYY-MM-DD-<name>` (same rule as `openspec archive`; never stack a second
+   date). If `<planningHome.changesDir>/archive/<target-name>` already exists, do not sync any of its delta specs: record that change as Failed (archive target
+   exists), remove its deltas from `includedDeltas`, re-derive any conflict
+   resolution it took part in using only the remaining changes, leave its
+   `changeRoot` where it is, and continue with the others.
+
    Process changes in the determined order (respecting conflict resolution):
 
    a. **Sync included delta specs**:
+      - Check that change's archive target again right before its sync. If `<planningHome.changesDir>/archive/<target-name>` now exists, fail that change before writing any of its main specs and leave its `changeRoot` where it is.
       - Run the `openspec-sync-specs` workflow inline (agent-driven intelligent merge) only for changes with entries in `includedDeltas`, passing only the included delta paths and explicitly instructing it to ignore that change's `excludedDeltas`. Wait for it to finish.
       - For conflicts, apply in resolved order.
       - Pass that change's fetched specs-rule snapshots, one per delta-spec
@@ -209,7 +219,11 @@ This skill allows you to batch-archive changes, handling spec conflicts intellig
 
    c. **Perform the archive**:
 
-      Target name: use the change name as-is when it already starts with a `YYYY-MM-DD-` prefix; otherwise prepend the current date as `YYYY-MM-DD-<name>` (same rule as `openspec archive`).
+      Use the `<target-name>` recorded before step 8a, unchanged.
+
+      **Check again immediately before the move:**
+      - If the target now exists: fail that change, leave `changeRoot` where it is, report any main specs step 8a synced for it, and suggest renaming the existing archive or this change. Never run the `mv` below onto an existing directory: POSIX `mv` would nest the change inside the old archive instead of failing.
+      - If not: move `changeRoot` to the archive directory
 
       ```bash
       mkdir -p "<planningHome.changesDir>/archive"
@@ -331,7 +345,7 @@ No active changes found. Create a new change to get started.
 - Track and report all outcomes (success/skip/fail)
 - Preserve .openspec.yaml when moving to archive
 - Archive directory target uses current date: YYYY-MM-DD-<name>; a name that already starts with a `YYYY-MM-DD-` prefix is used as-is (never stack a second date)
-- If archive target exists, fail that change but continue with others
+- If an archive target exists, fail that change before syncing any of its specs and continue with others
 - If sync is requested, run the `openspec-sync-specs` workflow inline (agent-driven) for each change with included delta specs
 - Write, create, or delete a main spec only where it and every parent resolve inside the real `<planningHome.root>/openspec/specs/` root; never follow a symlink out of it, and stop that capability's sync instead
 - Carry the per-delta `includedDeltas` and `excludedDeltas` decisions into execution; sync and verify only included deltas
