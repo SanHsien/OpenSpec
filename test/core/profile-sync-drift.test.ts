@@ -8,7 +8,8 @@ import {
   WORKFLOW_TO_SKILL_DIR,
 } from '../../src/core/profile-sync-drift.js';
 import { CORE_WORKFLOWS } from '../../src/core/profiles.js';
-import { CommandAdapterRegistry } from '../../src/core/command-generation/index.js';
+import { CommandAdapterRegistry, generateCommand } from '../../src/core/command-generation/index.js';
+import { getCommandContents } from '../../src/core/shared/skill-generation.js';
 
 function writeSkill(projectDir: string, workflowId: string): void {
   const skillDirName = WORKFLOW_TO_SKILL_DIR[workflowId as keyof typeof WORKFLOW_TO_SKILL_DIR];
@@ -17,13 +18,18 @@ function writeSkill(projectDir: string, workflowId: string): void {
   fs.writeFileSync(skillPath, `name: ${skillDirName}\n`);
 }
 
-function writeCommand(projectDir: string, workflowId: string): void {
+// Writes the command file OpenSpec itself generates (unedited), unless `content`
+// stands in for a file the user edited.
+function writeCommand(projectDir: string, workflowId: string, content?: string): void {
   const adapter = CommandAdapterRegistry.get('claude');
   if (!adapter) throw new Error('Claude adapter unavailable in test environment');
   const cmdPath = adapter.getFilePath(workflowId);
   const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectDir, cmdPath);
   fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-  fs.writeFileSync(fullPath, `# ${workflowId}\n`);
+  fs.writeFileSync(
+    fullPath,
+    content ?? generateCommand(getCommandContents([workflowId])[0], adapter).fileContent
+  );
 }
 
 function setupCoreSkills(projectDir: string): void {
@@ -71,6 +77,27 @@ describe('profile sync drift detection', () => {
 
     const hasDrift = hasProjectConfigDrift(tempDir, CORE_WORKFLOWS, 'skills');
     expect(hasDrift).toBe(true);
+  });
+
+  it('does not count a command file the user edited (kept by removal on purpose) as drift', () => {
+    // Removal keeps an edited command file, so reporting it as drift made every
+    // update re-run config sync and rewrite the skills without ever converging.
+    setupCoreSkills(tempDir);
+    writeCommand(tempDir, 'explore', '# explore\nOur team step.\n');
+
+    expect(hasToolProfileOrDeliveryDrift(tempDir, 'claude', CORE_WORKFLOWS, 'skills')).toBe(false);
+    expect(hasProjectConfigDrift(tempDir, CORE_WORKFLOWS, 'skills')).toBe(false);
+  });
+
+  it('does not count an edited command file of a deselected workflow as drift', () => {
+    setupCoreSkills(tempDir);
+    setupCoreCommands(tempDir);
+    writeSkill(tempDir, 'new');
+    fs.rmSync(path.join(tempDir, '.claude', 'skills', WORKFLOW_TO_SKILL_DIR.new), { recursive: true });
+    writeCommand(tempDir, 'new', '# new\nlocal tweak\n');
+
+    expect(hasToolProfileOrDeliveryDrift(tempDir, 'claude', CORE_WORKFLOWS, 'both')).toBe(false);
+    expect(hasProjectConfigDrift(tempDir, CORE_WORKFLOWS, 'both')).toBe(false);
   });
 
   it('detects drift for commands-only delivery when skills still exist', () => {

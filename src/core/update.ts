@@ -7,7 +7,7 @@
 
 import path from 'path';
 import chalk from 'chalk';
-import ora from 'ora';
+import { createSpinner } from '../utils/spinner.js';
 import * as fs from 'fs';
 import { createRequire } from 'module';
 import { FileSystemUtils } from '../utils/file-system.js';
@@ -117,6 +117,38 @@ export function scanInstalledWorkflows(projectPath: string, toolIds: string[]): 
     .map((id) => AI_TOOLS.find((t) => t.value === id))
     .filter((t): t is NonNullable<typeof t> => t != null);
   return scanInstalledWorkflowsShared(projectPath, tools);
+}
+
+/**
+ * True when an existing SKILL.md differs from every variant OpenSpec generates
+ * for this tool at the current version (one per delivery mode, since delivery
+ * changes how command references are written), compared after CRLF/LF and BOM
+ * normalization. Only meaningful for a tool already on the current version: an
+ * older generated skill also differs, and is upgraded rather than kept.
+ */
+function isUserEditedSkill(
+  skillFile: string,
+  toolId: string,
+  template: Parameters<typeof generateSkillContent>[0]
+): boolean {
+  let onDisk: string;
+  try {
+    onDisk = fs.readFileSync(skillFile, 'utf-8');
+  } catch {
+    return false; // missing (or unreadable): write it
+  }
+  const normalize = (text: string) => text.replace(/^﻿/, '').replace(/\r\n/g, '\n');
+  const actual = normalize(onDisk);
+  const deliveries: Delivery[] = ['both', 'skills', 'commands'];
+  return !deliveries.some((variant) => {
+    const transformer = getTransformerForTool(
+      toolId,
+      variant,
+      resolveCommandSurfaceCapability(toolId),
+      resolveCommandInvocation(toolId)
+    );
+    return normalize(generateSkillContent(template, OPENSPEC_VERSION, transformer)) === actual;
+  });
 }
 
 export class UpdateCommand {
@@ -290,7 +322,7 @@ export class UpdateCommand {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
       if (!tool || !toolSupportsSkills(tool)) continue;
 
-      const spinner = ora(`Updating ${tool.name}...`).start();
+      const spinner = createSpinner(`Updating ${tool.name}...`).start();
 
       try {
         const skillsDir = resolveToolSkillsDir(resolvedProjectPath, tool);
@@ -301,6 +333,13 @@ export class UpdateCommand {
         const toolWorkflows = legacyWorkflowOverrides[tool.value] ?? desiredWorkflows;
         const skillTemplates = getSkillTemplates(toolWorkflows);
         const commandContents = getCommandContents(toolWorkflows);
+
+        // A tool synced only for profile/delivery drift is already on this
+        // version, so an existing skill that matches no generated variant was
+        // edited by the user: keep it instead of overwriting it. Version
+        // upgrades and --force still regenerate every skill.
+        const configSyncOnly = !this.force && !toolsNeedingVersionUpdate.includes(tool.value);
+        const keptEditedSkills: string[] = [];
 
         // Generate skill files if delivery includes skills
         if (shouldGenerateSkills && writesSkills) {
@@ -316,6 +355,10 @@ export class UpdateCommand {
             );
             const skillContent = generateSkillContent(template, OPENSPEC_VERSION, transformer);
             FileSystemUtils.assertPathWithin(skillsRoot, skillFile);
+            if (configSyncOnly && isUserEditedSkill(skillFile, tool.value, template)) {
+              keptEditedSkills.push(path.relative(resolvedProjectPath, skillFile));
+              continue;
+            }
             await FileSystemUtils.writeFile(skillFile, skillContent);
           }
           writeSharedSkillTarget(resolvedProjectPath, tool.value);
@@ -377,6 +420,14 @@ export class UpdateCommand {
         }
 
         spinner.succeed(`Updated ${tool.name}`);
+        if (keptEditedSkills.length > 0) {
+          console.log(
+            chalk.yellow(
+              `Kept ${keptEditedSkills.length} skill file(s) you edited; run "openspec update --force" to replace them:\n` +
+                keptEditedSkills.map((p) => `  ${p.replace(/\\/g, '/')}`).join('\n')
+            )
+          );
+        }
         updatedTools.push(tool.name);
         updatedToolIds.push(tool.value);
         for (const migration of migrateLegacyToolDirs(
@@ -1069,7 +1120,7 @@ export class UpdateCommand {
    * Perform cleanup of legacy artifacts.
    */
   private async performLegacyCleanup(projectPath: string, detection: LegacyDetectionResult): Promise<void> {
-    const spinner = ora('Cleaning up legacy files...').start();
+    const spinner = createSpinner('Cleaning up legacy files...').start();
 
     const result = await cleanupLegacyArtifacts(projectPath, detection);
 
@@ -1183,7 +1234,7 @@ export class UpdateCommand {
       const tool = AI_TOOLS.find((t) => t.value === toolId);
       if (!tool || !toolSupportsSkills(tool)) continue;
 
-      const spinner = ora(`Setting up ${tool.name}...`).start();
+      const spinner = createSpinner(`Setting up ${tool.name}...`).start();
 
       try {
         const skillsDir = resolveToolSkillsDir(projectPath, tool);

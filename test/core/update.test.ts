@@ -744,6 +744,53 @@ metadata:
       expect(await FileSystemUtils.fileExists(proposeCmd)).toBe(false);
     });
 
+    it('reports up to date after keeping an edited command file instead of re-syncing (and rewriting skills) on every run', async () => {
+      // Regression: drift detection counted a command file kept on purpose as
+      // drift, so every update re-ran config sync and rewrote the skills.
+      setMockConfig({ featureFlags: {}, profile: 'core', delivery: 'both' });
+      await new InitCommand({ tools: 'claude', force: true }).execute(testDir);
+      const exploreCmd = path.join(testDir, '.claude', 'commands', 'opsx', 'explore.md');
+      await fs.writeFile(exploreCmd, (await fs.readFile(exploreCmd, 'utf-8')) + '\nOur team step.\n');
+
+      setMockConfig({ featureFlags: {}, profile: 'core', delivery: 'skills' });
+      await new UpdateCommand().execute(testDir); // the real switch: removes unedited commands
+
+      const skillFile = path.join(testDir, '.claude', 'skills', 'openspec-explore', 'SKILL.md');
+      const editedSkill = (await fs.readFile(skillFile, 'utf-8')) + '\nUSER-EDIT-MARKER\n';
+      await fs.writeFile(skillFile, editedSkill);
+
+      const consoleSpy = vi.spyOn(console, 'log');
+      await new UpdateCommand().execute(testDir);
+      await new UpdateCommand().execute(testDir);
+      const logCalls = consoleSpy.mock.calls.flat().map(String);
+      consoleSpy.mockRestore();
+
+      expect(logCalls.some((entry) => entry.includes('config sync'))).toBe(false);
+      expect(logCalls.filter((entry) => entry.includes('up to date'))).toHaveLength(2);
+      expect(await fs.readFile(skillFile, 'utf-8')).toBe(editedSkill);
+      expect(await FileSystemUtils.fileExists(exploreCmd)).toBe(true);
+    });
+
+    it('keeps a skill the user edited when a config sync regenerates the other skills', async () => {
+      setMockConfig({ featureFlags: {}, profile: 'core', delivery: 'skills' });
+      await new InitCommand({ tools: 'claude', force: true }).execute(testDir);
+      const skillsDir = path.join(testDir, '.claude', 'skills');
+      const exploreSkill = path.join(skillsDir, 'openspec-explore', 'SKILL.md');
+      const proposeSkill = path.join(skillsDir, 'openspec-propose', 'SKILL.md');
+      const editedSkill = (await fs.readFile(exploreSkill, 'utf-8')) + '\nUSER-EDIT-MARKER\n';
+      await fs.writeFile(exploreSkill, editedSkill);
+      await fs.rm(proposeSkill); // real drift: a selected workflow lost its skill
+
+      const consoleSpy = vi.spyOn(console, 'log');
+      await new UpdateCommand().execute(testDir);
+      const logCalls = consoleSpy.mock.calls.flat().map(String);
+      consoleSpy.mockRestore();
+
+      expect(await FileSystemUtils.fileExists(proposeSkill)).toBe(true);
+      expect(await fs.readFile(exploreSkill, 'utf-8')).toBe(editedSkill);
+      expect(logCalls.some((entry) => entry.includes('openspec-explore') && entry.includes('Kept'))).toBe(true);
+    });
+
     it('lets a first-time legacy Codex upgrade claim an unowned agents root', async () => {
       // Inverse of the hijack guard: with no `.agents` tree yet, nothing is
       // owned, so the real update path must still generate Codex skills and

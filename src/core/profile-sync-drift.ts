@@ -12,6 +12,7 @@ import {
   shouldRemoveSkillsForTool,
 } from './command-surface.js';
 import { readSharedSkillTarget } from './shared-skill-target.js';
+import { isRemovableCommandFile } from './shared/command-removal.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 import { isLegacyCodexSkillEquivalentToCurrent } from './shared/skill-content-equivalence.js';
 import {
@@ -153,20 +154,18 @@ export function hasToolProfileOrDeliveryDrift(
       }
     }
 
-    // Deselecting workflows in a profile should trigger sync.
+    // Deselecting workflows in a profile should trigger sync. Only a file the
+    // sync would actually delete counts: one kept on purpose (edited, symlink,
+    // unverifiable) would otherwise re-trigger a sync on every update.
     for (const workflow of ALL_WORKFLOWS) {
       if (desiredWorkflowSet.has(workflow)) continue;
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-      if (fs.existsSync(fullPath)) {
+      if (isRemovableCommandFile(projectPath, toolId, workflow)) {
         return true;
       }
     }
   } else if (shouldReconcileCommandFilesForTool(toolId, delivery) && adapter) {
     for (const workflow of ALL_WORKFLOWS) {
-      const cmdPath = adapter.getFilePath(workflow);
-      const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-      if (fs.existsSync(fullPath)) {
+      if (isRemovableCommandFile(projectPath, toolId, workflow)) {
         return true;
       }
     }
@@ -215,9 +214,9 @@ function getInstalledWorkflowsForTool(
     const adapter = CommandAdapterRegistry.get(toolId);
     if (adapter) {
       for (const workflow of ALL_WORKFLOWS) {
-        const cmdPath = adapter.getFilePath(workflow);
-        const fullPath = path.isAbsolute(cmdPath) ? cmdPath : path.join(projectPath, cmdPath);
-        if (fs.existsSync(fullPath)) {
+        // A command file update keeps on purpose (user-edited and the like) is
+        // not something a sync could change, so it does not count here.
+        if (isRemovableCommandFile(projectPath, toolId, workflow)) {
           installed.add(workflow);
         }
       }
