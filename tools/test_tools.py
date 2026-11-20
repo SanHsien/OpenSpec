@@ -73,6 +73,15 @@ class FreshnessTests(unittest.TestCase):
         self.assertEqual(freshness.classify("^4.1.12", None), "CHECK_FAILED")
         self.assertEqual(freshness.classify("workspace:*", "1.0.0"), "SKIP")
 
+    def test_short_version_ranges_are_classified_not_skipped(self) -> None:
+        # `^4` / `^4.6` / `4.x` declare a major floor just like `^4.0.0`; skipping
+        # them hid a major-behind dependency from --strict.
+        self.assertEqual(freshness.classify("^4", "5.0.1"), "OUTDATED")
+        self.assertEqual(freshness.classify("^4.6", "5.0.1"), "OUTDATED")
+        self.assertEqual(freshness.classify("~4.6", "4.9.0"), "OK")
+        self.assertEqual(freshness.classify("4.x", "5.0.0"), "OUTDATED")
+        self.assertEqual(freshness.classify(">=20", "20.1.0"), "OK")
+
     def test_registry_failure_is_not_success(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             package = Path(tmp) / "package.json"

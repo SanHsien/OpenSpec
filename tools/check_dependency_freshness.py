@@ -29,7 +29,9 @@ def get_latest_version(package_name: str) -> str | None:
         return None
 
 
-SPEC_VERSION = re.compile(r"^\s*(?:[\^~]|>=?|=)?\s*v?(\d+)\.(\d+)\.(\d+)")
+# Only the major number is compared, so `^4`, `^4.6` and `4.x` are read like
+# `^4.0.0` instead of being skipped (a skipped spec is invisible to --strict).
+SPEC_VERSION = re.compile(r"^\s*(?:[\^~]|>=?|=)?\s*v?(\d+)(?:\.(?:\d+|[xX*])){0,2}(?![\w.])")
 
 
 def classify(spec: str, latest: str | None) -> str:
