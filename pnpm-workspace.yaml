@@ -33,3 +33,9 @@ overrides:
   # in the published CLI. Remove once transitive launch-editor is >=2.14.2
   # (check: pnpm why launch-editor).
   launch-editor@<2.14.2: '>=2.14.2 <3'
+  # GHSA-g3hv-75wg-m249 — minimatch globParts amplification DoS (<11.0.1). Reached
+  # at runtime through glob and in dev through eslint / typescript-eslint, which
+  # pin ^10. glob must stay on >=14 (minimatch ^11) together with this pin: an
+  # older glob on minimatch 11 can silently return no matches. Remove once
+  # transitive minimatch is >=11.0.1 everywhere (check: pnpm why minimatch).
+  minimatch@<11.0.1: '>=11.0.1 <12'

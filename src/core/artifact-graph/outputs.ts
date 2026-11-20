@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Glob, globSync } from 'glob';
+import { braceExpand } from 'minimatch';
 import { FileSystemUtils } from '../../utils/file-system.js';
 
 const MAX_BRACE_NESTING = 16;
@@ -128,26 +129,18 @@ export function resolveArtifactOutputs(changeDir: string, generates: string): st
   }
 
   const normalizedPattern = FileSystemUtils.toPosixPath(generates);
-  // Glob optimizes away literal `dir/..` components. Encode separators during
-  // brace expansion so every unoptimized alternative can be validated first.
-  // A prefixed single component also prevents Windows root/drive interpretation.
-  const separator = '\u0001';
-  if (normalizedPattern.includes(separator)) {
-    throw new Error('Artifact output pattern contains an unsupported control character');
-  }
-  const prefix = 'artifact:';
-  const expansion = new Glob(prefix + normalizedPattern.replaceAll('/', separator), {
-    cwd: changeDir,
-    braceExpandMax: MAX_BRACE_EXPANSIONS + 1,
-  });
+  // Expand braces ourselves, before Glob sees the pattern. Glob (minimatch >=11)
+  // folds brace alternatives into one `@(a|b)` extglob and optimizes away literal
+  // `dir/..` components, so its parsed patterns can no longer be validated one
+  // alternative at a time. The raw expansion keeps every alternative verbatim.
   // The library truncates at its cap instead of throwing. Request one extra
   // alternative to detect overflow rather than silently omitting unsafe branches.
-  if (expansion.patterns.length > MAX_BRACE_EXPANSIONS) {
+  const alternatives = braceExpand(normalizedPattern, {
+    braceExpandMax: MAX_BRACE_EXPANSIONS + 1,
+  });
+  if (alternatives.length > MAX_BRACE_EXPANSIONS) {
     throw new Error(`Artifact output pattern expands beyond ${MAX_BRACE_EXPANSIONS} alternatives`);
   }
-  const alternatives = expansion.patterns.map((pattern) =>
-    pattern.globString().slice(prefix.length).replaceAll(separator, '/')
-  );
   // Validate ALL lexical alternatives before any directory matching or traversal.
   for (const alternative of alternatives) {
     if (path.posix.isAbsolute(alternative) || path.win32.isAbsolute(alternative)

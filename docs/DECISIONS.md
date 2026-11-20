@@ -1233,3 +1233,33 @@ commit `ea635dd2`→`f085c850`；PR 水位 `#2246`→`#2277`；Issue 水位 `#22
 ### 水位
 
 commit `f085c850`→`0c737dc1`；PR 水位 `#2277`→`#2287`；Issue 水位 `#2276`→`#2288`；日期 `2026-11-20`；`monitored` 維持 11 筆，#2264、#2266、#2267、#2277 重釘為合併時的 head 與 `closed`。水位只表示已讀取並有結論，延後項目仍待重看條件成立。
+
+## 2026-11-20：關閉 Dependabot 告警 #33（minimatch GHSA-g3hv-75wg-m249），glob 升 14
+
+### 為什麼現在做
+
+2026-11-02 延後上游 PR #2192 時寫下的觸發條件是「本 fork 出現 minimatch 的 Dependabot 告警」。SanHsien/OpenSpec 現有開啟中的告警 #33（minimatch <11.0.1，globParts 放大 DoS），觸發條件成立。Dependabot 回報 `security_update_not_possible`：`minimatch` 只經 `glob@13`（執行期）與 eslint／`@eslint/config-array`／`@typescript-eslint` 的 `^10.x` 引入，10.x 最新版 10.2.6 仍受影響，沒有單獨可升的路徑。Dependabot PR #8（glob 13→14）的 CI 失敗，原因見下。11-02 擔心的「跨 major override 讓 eslint 系列用到範圍外的 minimatch」已實測：lint 通過。
+
+### 變更
+
+| 檔案 | 變更 |
+| --- | --- |
+| `package.json` | `glob` `^13.0.6`→`^14.0.2`；新增直接依賴 `minimatch` `^11.0.1`（程式直接呼叫 `braceExpand`，見下） |
+| `pnpm-workspace.yaml` | overrides 新增 `minimatch@<11.0.1: '>=11.0.1 <12'`（overrides 仍只在此處宣告） |
+| `pnpm-lock.yaml` | 重產：`glob@14.0.6`、`minimatch@11.0.9`、`path-scurry@3.0.0`，新增 `@isaacs/nonrecursive-glob-match@1.1.0`；`pnpm why minimatch` 只剩 11.0.9 一版 |
+| `src/core/artifact-graph/outputs.ts` | 以 `minimatch` 的 `braceExpand` 自行展開 brace，取代讀 `new Glob(...).patterns` |
+| `.changeset/glob-14-minimatch-11.md`、`ROADMAP.md` | patch changeset；刪除已完成的「重評 minimatch override」列 |
+
+glob 與 minimatch 必須同步升：舊 glob 搭配 minimatch 11 會讓萬用字元靜默回空（agent-desktop ADR-010 的實例），所以不單獨加 override。glob 14 的 engines 為 `18 || 20 || >=22`，不排除 Node 20.19，不違反 11-08 的 Node 政策；上方「依賴新鮮度」表中 `glob` 一列的重看條件（安排 confinement 相容驗證）由本節完成。
+
+### 測試失敗的根因
+
+`resolveArtifactOutputs` 原本以 `new Glob('artifact:' + 編碼後的 pattern, { braceExpandMax })` 取 `expansion.patterns`，每個元素對應一個 brace alternative，再逐一驗證（絕對路徑、`..`、專案外）後才做目錄 matching。minimatch 11 的 `preprocess` 把 alternatives 折成單一 extglob，`{safe,../x}/**/*.md` 的 `patterns` 只剩一筆 `@(artifact:safe…|artifact:..…)`（實測 `patterns.length` 為 1，而 `Minimatch#globSet` 仍是 2 筆）。逐筆驗證因此看到的是「前綴＋`|`＋後綴＋`)`」的合併字串：`..` 片段判斷落空，錯誤訊息從「must be relative without ..」變成「outside the allowed directory」，safe alternatives 的比對也失敗，共 4 個測試紅燈。邊界本身仍擋得住，但驗證點錯位，等於把安全性押在後面一道檢查上。API 沒有被移除，是 `Glob#patterns` 的語意從「展開後的每個 alternative」變成「優化後的 pattern」。
+
+修法是不再讓 Glob 代為展開：進 Glob 前用 `braceExpand`（minimatch 的公開匯出）取得原始 alternatives，沿用同一個上限（請求 `MAX_BRACE_EXPANSIONS + 1` 偵測溢出）與同一組逐筆驗證，之後仍以 `nobrace: true` 交給 Glob 比對。原本為避開 Glob 優化 `dir/..` 而做的分隔符編碼與 `artifact:` 前綴不再需要，已移除。既有測試一字未改。
+
+### 驗證
+
+- `pnpm why minimatch`：只有 `minimatch@11.0.9`，來自 `glob@14.0.6` 與 eslint 系列，無 10.x。
+- `pnpm test`、`pnpm exec tsc --noEmit`、lint、`tools/dev_check.ps1`：全綠，數字見提交時的回報。
+- `flake.nix` 的 `pnpmDeps` hash 隨鎖檔改變。本機沒有 Nix，無法計算；須由 CI 的 Nix job 失敗訊息取得 `got: sha256-…` 後更新。

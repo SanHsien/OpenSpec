@@ -18,7 +18,6 @@ OpenSpec 提供 AI 開發的規格、提案、實作與歸檔工作流，本線�
 | 重評 symlink 與 REMOVED／RENAMED 語意 | 維護者明確要支援 symlink 目錄，或決定採用上游 #1962 | 專案外目標仍遭拒，合法目標有測試；verify 的刪除／改名案例按批准規格判級，不放寬 confinement 讓測試過關 | Claude Opus | docs/DECISIONS.md:546、555 |
 | 重評 ZDOTDIR completion 修補 | 有 ZDOTDIR 使用需求、安排 POSIX 驗收，或要跟進已合併的上游 `05cc75f` | 先定相對 ZDOTDIR 政策，再測絕對／空白／未設定值、安裝與解除安裝往返、舊 home 區塊清理、提示一致及真實 zsh 載入；Windows gate 不代替 POSIX smoke | Codex | docs/DECISIONS.md「2026-10-30：補審上游」；PR #2172（已合併為 `05cc75f`，pinned 在 `b008daa`） |
 | 重評 requirement／scenario／decision 穩定 ID | 維護者決定引入 ID，或採用 #1979／beta skills #2134 前 | 先定 ID 與名稱匹配規格，再測無 ID 向後相容、重複 ID、改名與移除 ID；同步 parser、validate、archive 與文件，不引用未重跑的上游歷史數據當本機證據 | 維護者 | docs/DECISIONS.md「2026-10-30：補審上游」；issue #2167 |
-| 重評 minimatch override（GHSA-g3hv-75wg-m249） | 本 fork 出現 minimatch 的 Dependabot 告警，或 eslint 系列放寬到 `>=11`，或上游 PR #2192 合併 | 先 `pnpm why minimatch` 確認仍只經 dev 依賴；套 override 後 lint、type-check、build 與全套測試通過，不帶入跨 major 的相容問題 | Codex | docs/DECISIONS.md「2026-11-02：上游積壓審查」；上游 PR #2192（`monitored`） |
 | 評估是否啟用上游 branch 軸 | 維護者需要追蹤未連到 PR 的上游分支 | 先定義有限篩選與成本上限，試跑確認不重複列已審 PR；不因 branch 數量直接推進水位 | 維護者 | tools/upstream_baseline.json；深掃報告（2026-10-2x）「待維護者決定」 |
 
 ## 刻意不做
