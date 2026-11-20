@@ -2,12 +2,19 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'fs';
 import os from 'os';
 import path from 'path';
-import { runCLI } from '../helpers/run-cli.js';
+import { runCLI, terminateActiveCliChildren } from '../helpers/run-cli.js';
+
+// Every case spawns the real CLI. A cold Node start on Windows can push one past
+// the default 10s, so give them more room there (same as store-git/store-remote).
+// The CLI timeout stays below the test timeout so runCLI kills a slow child and
+// reports it, instead of vitest abandoning the test with the child still running.
+const CLI_TEST_TIMEOUT_MS = process.platform === 'win32' ? 30_000 : 10_000;
+const CLI_TIMEOUT_MS = CLI_TEST_TIMEOUT_MS - 5_000;
 
 // Every command but `validate` ignores a config.yaml that is not valid YAML
 // with a warning, which silently drops every rule in it. `validate` is the gate
 // CI runs, so it has to fail on such a file (upstream #1892).
-describe('validate with an unparseable config.yaml', () => {
+describe('validate with an unparseable config.yaml', { timeout: CLI_TEST_TIMEOUT_MS }, () => {
   let testDir: string;
   let configPath: string;
 
@@ -42,13 +49,16 @@ describe('validate with an unparseable config.yaml', () => {
   });
 
   afterEach(async () => {
-    await fs.rm(testDir, { recursive: true, force: true });
+    // A child left running (failed assertion, aborted test) holds the temp dir
+    // open on Windows and turns cleanup into EBUSY; stop it first.
+    terminateActiveCliChildren();
+    await fs.rm(testDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   });
 
   it.each([[['--all']], [['--specs']], [['--archived']], [['alpha']]])(
     'fails `validate %s` with the parse error',
     async (args) => {
-      const result = await runCLI(['validate', ...args], { cwd: testDir });
+      const result = await runCLI(['validate', ...args], { cwd: testDir, timeoutMs: CLI_TIMEOUT_MS });
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Error: Could not parse');
@@ -57,7 +67,7 @@ describe('validate with an unparseable config.yaml', () => {
   );
 
   it('names the config file in the error', async () => {
-    const result = await runCLI(['validate', '--all'], { cwd: testDir });
+    const result = await runCLI(['validate', '--all'], { cwd: testDir, timeoutMs: CLI_TIMEOUT_MS });
 
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain(path.join('openspec', 'config.yaml'));
@@ -67,7 +77,7 @@ describe('validate with an unparseable config.yaml', () => {
     const ymlPath = path.join(testDir, 'openspec', 'config.yml');
     await fs.rename(configPath, ymlPath);
 
-    const result = await runCLI(['validate', '--all'], { cwd: testDir });
+    const result = await runCLI(['validate', '--all'], { cwd: testDir, timeoutMs: CLI_TIMEOUT_MS });
 
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain(path.join('openspec', 'config.yml'));
@@ -75,7 +85,7 @@ describe('validate with an unparseable config.yaml', () => {
 
   // `list` does not load config.yaml, so it neither warns nor fails on the broken file.
   it('leaves commands that do not read the config working', async () => {
-    const result = await runCLI(['list', '--specs'], { cwd: testDir });
+    const result = await runCLI(['list', '--specs'], { cwd: testDir, timeoutMs: CLI_TIMEOUT_MS });
 
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('alpha');
@@ -83,7 +93,7 @@ describe('validate with an unparseable config.yaml', () => {
   });
 
   it('reports the parse error in the JSON status envelope', async () => {
-    const result = await runCLI(['validate', '--all', '--json'], { cwd: testDir });
+    const result = await runCLI(['validate', '--all', '--json'], { cwd: testDir, timeoutMs: CLI_TIMEOUT_MS });
 
     expect(result.exitCode).toBe(1);
     const output = JSON.parse(result.stdout);
@@ -95,7 +105,7 @@ describe('validate with an unparseable config.yaml', () => {
   it('still passes once the YAML is fixed', async () => {
     await fs.writeFile(configPath, 'schema: spec-driven\n');
 
-    const result = await runCLI(['validate', '--all'], { cwd: testDir });
+    const result = await runCLI(['validate', '--all'], { cwd: testDir, timeoutMs: CLI_TIMEOUT_MS });
 
     expect(result.exitCode).toBe(0);
   });
@@ -103,7 +113,7 @@ describe('validate with an unparseable config.yaml', () => {
   it('still passes when the YAML parses but a field is invalid (that stays a warning)', async () => {
     await fs.writeFile(configPath, 'schema: spec-driven\ncontext: 5\n');
 
-    const result = await runCLI(['validate', '--all'], { cwd: testDir });
+    const result = await runCLI(['validate', '--all'], { cwd: testDir, timeoutMs: CLI_TIMEOUT_MS });
 
     expect(result.exitCode).toBe(0);
   });
@@ -111,7 +121,7 @@ describe('validate with an unparseable config.yaml', () => {
   it('does not require a config file at all', async () => {
     await fs.rm(configPath);
 
-    const result = await runCLI(['validate', '--all'], { cwd: testDir });
+    const result = await runCLI(['validate', '--all'], { cwd: testDir, timeoutMs: CLI_TIMEOUT_MS });
 
     expect(result.exitCode).toBe(0);
   });
