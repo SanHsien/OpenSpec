@@ -1,10 +1,10 @@
 {
   "repo": "https://github.com/Fission-AI/OpenSpec.git",
   "branch": "main",
-  "reviewed_through": "f085c850f9440f497ccc76ecbc2859c09e0e0ac7",
-  "reviewed_date": "2026-11-18",
-  "reviewed_pr_through": 2277,
-  "reviewed_issue_through": 2276,
+  "reviewed_through": "0c737dc1b543249b38b0f4716816fcf493d894dd",
+  "reviewed_date": "2026-11-20",
+  "reviewed_pr_through": 2287,
+  "reviewed_issue_through": 2288,
   "monitored": [
     {
       "item": "pr#2168",
@@ -44,22 +44,22 @@
     {
       "item": "pr#2264",
       "head": "a80f6551c4291cac801404a3d856c07cd9768047",
-      "state": "open"
+      "state": "closed"
     },
     {
       "item": "pr#2266",
-      "head": "bd8a20cc3e51011cd964a8866bf477c7abfe907f",
-      "state": "open"
+      "head": "53f24a565cf9d86f0d73ae6018a4f0b8bbfb30a2",
+      "state": "closed"
     },
     {
       "item": "pr#2267",
       "head": "820ef1df8aea2db8b5d1133957deb263182fe516",
-      "state": "open"
+      "state": "closed"
     },
     {
       "item": "pr#2277",
-      "head": "e6ee4afb3f55eabe5c6cd5c24ea9de8af63e8c8c",
-      "state": "open"
+      "head": "a1444d6b04c8e7a75a4077ec95cdaba99a888232",
+      "state": "closed"
     }
   ]
 }

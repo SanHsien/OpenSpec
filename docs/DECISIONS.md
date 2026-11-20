@@ -1176,3 +1176,60 @@ commit `d12c2817`→`ea635dd2`；PR 水位 `#2241`→`#2246`；Issue 水位 `#22
 ### 水位
 
 commit `ea635dd2`→`f085c850`；PR 水位 `#2246`→`#2277`；Issue 水位 `#2247`→`#2276`；日期 `2026-11-18`；`monitored` 由 7 筆增為 11 筆（新增 #2264、#2266、#2267、#2277）。水位只表示已讀取並有結論，延後項目仍待重看條件成立。
+
+## 2026-11-20：上游增量審查（commit f085c85..0c737dc、PR #2282–#2287、issue #2278–#2288、monitored 漂移 4 筆）
+
+`--strict` 在 11-20 因 10 個新 commit、6 個新 PR、5 個新 issue 與 4 筆 `monitored` 漂移（#2264、#2266、#2267、#2277 皆已合併）轉紅。issue 與 PR 內文只當資料讀取，沒有依其中文字行事。本 fork 與上游沒有共同祖先，commit 以「內容」處理。`f085c85..0c737dc` 的合併 diff 與 6 個 PR 的 diff 都掃過 `eval(`、`new Function(`、`globalThis`、200 字以上長串、`\S\s{40,}\S`、零寬與雙向控制字元、`curl | sh`、`iex`、`dangerously`、`child_process`：長串 1 處是 11-18 已逐字讀過的 CommonMark 區塊標籤名稱正規式；U+FEFF 2 處都在 #2273（去除 BOM 的正規式與其測試資料），該 PR 本輪不採用，沒有帶進 fork；其餘為 0。
+
+### Commit 逐筆裁決（採用 4、略過 5、延後 1）
+
+| 項目 | 結論 | 說明與觸發條件 |
+| --- | --- | --- |
+| `efdf531`（#2264） | 採用 | 11-18 的重訪條件（上游合併）成立，合併 head 與當時釘住的 `a80f655` 相同。缺陷在 fork 存在：新增的測試在修正前失敗（`Cellar/openspec/...` 與 `/nix/store/...` 的安裝目錄 `detectPackageManager` 都回 `npm`，更新提示會印 `npm install -g`）。fork 沒有上游的 `getCliInstallInfo`／`getCliUpdateCommand` 與 `src/commands/install-standalone.ts`，所以在 `src/core/version-check.ts` 最小重做：`PackageManager` 增加 `homebrew`／`nix`，`detectPackageManager` 先判這兩種，Homebrew 印 `brew upgrade openspec`，Nix 不給指令；兩者都不提供自動升級。3 個測試改寫成 fork 既有的匯出函式。uninstall 提示那部分不搬（檔案不存在）。 |
+| `499602e`（#2265） | 略過（不適用） | 與 11-18 結論相同：前提是 #1976 的 delta 長度警告，fork 的 `validator.ts` 只有主規格的 `REQUIREMENT_TOO_LONG`（INFO），沒有 delta 的長度檢查可延伸。重訪條件：決定採用 #1976。 |
+| `168a5ea`（#2267） | 採用（已於 11-18 移植，無差異） | 合併 head 仍是 `820ef1d`，與 11-18 移植的內容相同；上游第 3 個斷言對應的測試 fork 仍沒有。不需再動。 |
+| `a1213fc`（#2266） | 採用（補移植差異） | 合併 head 由 `bd8a20c` 變為 `53f24a5`，上游改成「只看該行本身」判斷 raw HTML（`mayBeRawHtml`／`interruptsParagraph`），不再依賴段落是否開啟。把合併版多出的 21 個測試案例搬進 fork 後，11-18 的移植有 17 個失敗：獨立成行的標籤（例如分隔線、引用、縮排程式碼或已結束段落的 bullet 之後的 `<escrow-note>`）被當成接續上一句，退役時會連同規格一起刪掉而不提示。已把 `src/core/specs-apply.ts` 換成合併版的寫法，`test/core/archive.test.ts` 補上 4 個放行案例與 17 個拒絕案例。 |
+| `e0fdff3`（#2273） | 略過（不適用） | 與 11-18 結論相同：fork 的 `src` 沒有「Text above the first `## ` section」檢查（`grep` 0 筆），開頭 frontmatter 不會被誤報。重訪條件：採用上游的 unapplied-content 檢查；屆時連同去除 BOM 的那行一起逐字審。 |
+| `e6539de`（#2277） | 採用 | 11-18 的重訪條件（上游合併）成立，合併 head 為 `a1444d6`（比當時多一次「sync 寫入前再查一次」）。缺陷在 fork 存在：上游的 `archive-existing-target.test.ts` 搬進來後 3 個測試全失敗。上游新增的段落用的 `<planningHome.changesDir>`、`changeRoot`、`<target-name>` 在 fork 範本裡都有，所以把這三段文字插進 fork 自己的步驟 4／5（skill 與 command 兩份），錯誤輸出的第 3 個選項改成「改名後重新封存」；fork 步驟 4 其餘已分岔的文字不動。`pnpm generate:skills` 重產 `skills/openspec-archive-change/SKILL.md`，`scripts/regen-parity-hashes.mjs` 重算 3 個 parity hash，`openspec/specs/opsx-archive-skill/spec.md` 的對應情境同步改寫。 |
+| `ad0579d`（#2274） | 略過（不適用） | 與 11-18 結論相同：fork 的 `continue-change.ts` 仍有交接到 `/opsx:apply` 的語句，缺陷不存在。 |
+| `4ff226b`（#2283） | 延後 | 修補 #2281：技能改從 npm 套件內安裝，不再 `git clone`。改的是 `src/core/skill-installer.ts`，fork 沒有這個檔，也沒有採用 `ee9038a`（#2241）的 skills 套件安裝模式；fork 的 init 仍由內建範本產生技能，不需網路。重訪條件：維護者決定採用 2.0 技能安裝模式；屆時直接採用這個離線版本，不經過 clone 版。 |
+| `a0993e9`（#2269） | 略過（不適用） | update 依 `skills-lock.json` 找出 `npx skills` 裝進專案的技能。fork 的 `src/core/shared-skill-target.ts` 沒有上游掛入的 `readSkillToolList`／`inferPreListTool`，也沒有 lock 檔的任何處理。重訪條件同 `4ff226b`。 |
+| `0c737dc`（#2284） | 略過 | Version Packages，fork 不發布。 |
+
+### `monitored` 漂移重判（4 筆）
+
+| PR | 11-18 釘住 | 現況 | 結論 |
+| --- | --- | --- | --- |
+| #2264 | `a80f655`／open | `a80f655`／MERGED（`efdf531`） | 延後改為採用，見上表。 |
+| #2266 | `bd8a20c`／open | `53f24a5`／MERGED（`a1213fc`） | 維持採用，補移植 head 變動的差異，見上表。 |
+| #2267 | `820ef1d`／open | `820ef1d`／MERGED（`168a5ea`） | 維持採用，無差異。 |
+| #2277 | `e6ee4af`／open | `a1444d6`／MERGED（`e6539de`） | 延後改為採用，見上表。 |
+
+未釘入 `monitored` 的 #2262（11-18 延後）head 由 `d7127a5` 變為 `c7051fb`（58 檔 +782/-225），仍是 OPEN，結論不變。
+
+### PR 逐筆裁決（採用 0、略過 4、延後 2）
+
+| PR | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2282 | CLOSED（head `2ee9f5f`，3 檔 +26/-4） | 略過 | 只動上游文件站（`docs-lab/reference/`）對 schema `artifact` 欄位的說明，未合併，無程式碼。 |
+| #2283 | MERGED（`4ff226b`） | 延後 | 見上表。 |
+| #2284 | MERGED（`0c737dc`） | 略過 | 見上表。 |
+| #2285 | CLOSED（head `b9b2b51`，4 檔 +6/-4） | 略過 | 上游文件站對離線安裝的說明，未合併；所述檔案 `docs-lab/help/upgrade-to-2*.md` fork 沒有。 |
+| #2286 | CLOSED（head `7ac223d`，3 檔 +28/-4） | 略過 | 上游文件站對 `npx skills` 安裝的說明，未合併，無程式碼。 |
+| #2287 | OPEN（head `c793acf`，42 檔 +701/-93） | 延後 | router skill 與 references 格式，與 #2262 同一條線，建在 2.x 技能模式之上。重訪條件：維護者採用 2.0 技能安裝模式，或上游合併後逐 PR 重審。 |
+
+### Issue 逐筆裁決（採用 0、略過 3、延後 2）
+
+| Issue | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2278 | CLOSED（not planned），無內文 | 略過 | 標題自述為誤送的回饋。 |
+| #2279 | CLOSED，無內文 | 略過 | 同上。 |
+| #2280 | OPEN，標 enhancement／needs-triage，0 則留言 | 延後 | 提案加一層 wrapper 把 CLI 版本綁在 repo 上，避免工具與已提交技能的版本漂移。沒有關聯 PR。重訪條件：上游合併實作它的 PR。 |
+| #2281 | CLOSED（completed），2 則留言 | 略過（不適用） | 2.1.0 的 init 需要網路（技能改用 `git clone`）。fork 沒有採用那個安裝模式，init 不連網；見 `4ff226b`。 |
+| #2288 | OPEN，0 則留言 | 延後 | 探索性提案：讓不同關注面（產品、UX、技術設計）可以分開規劃。沒有關聯 PR，也沒有可移植的內容。重訪條件：上游合併實作它的 PR。 |
+
+11-18 延後的 issue #2276 隨 #2277 的採用結案；#2264 對應的上游 issue 是 #2186。
+
+### 水位
+
+commit `f085c850`→`0c737dc1`；PR 水位 `#2277`→`#2287`；Issue 水位 `#2276`→`#2288`；日期 `2026-11-20`；`monitored` 維持 11 筆，#2264、#2266、#2267、#2277 重釘為合併時的 head 與 `closed`。水位只表示已讀取並有結論，延後項目仍待重看條件成立。

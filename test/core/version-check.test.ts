@@ -522,6 +522,51 @@ describe('offerCliUpgrade', () => {
     expect(buildUpgradeCommandLines(volta, PROJECT_ROOT)[0]).toContain('volta install');
   });
 
+  it('reports a Homebrew install as brew-owned, not as an npm global (upstream #2264)', () => {
+    // The formula runs `npm install` into libexec, so the copy sits in npm's
+    // own layout with a bin dir beside lib - exactly what npm-global detection
+    // accepts. Built on disk so that check really runs against it; the .cmd
+    // shim is what the same check looks for on Windows.
+    const brewRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'openspec-brew-'));
+    try {
+      const libexec = path.join(brewRoot, 'Cellar', 'openspec', '2.0.0', 'libexec');
+      const installed = path.join(libexec, 'lib', 'node_modules', '@fission-ai', 'openspec');
+      fs.mkdirSync(installed, { recursive: true });
+      fs.mkdirSync(path.join(libexec, 'bin'), { recursive: true });
+      fs.writeFileSync(path.join(libexec, 'lib', 'openspec.cmd'), '');
+
+      expect(detectPackageManager(installed)).toBe('homebrew');
+      expect(isNpmGlobalInstall(installed, [])).toBe(false);
+      expect(canSelfUpgrade(installed, PROJECT_ROOT)).toBe(false);
+      expect(buildUpgradeCommandLines(installed, PROJECT_ROOT)[0]).toBe('  brew upgrade openspec');
+    } finally {
+      fs.rmSync(brewRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    }
+  });
+
+  it('reports a Nix store install without an npm update command (upstream #2264)', () => {
+    const installed = '/nix/store/abc123-openspec-2.1.0/lib/node_modules/@fission-ai/openspec';
+
+    expect(detectPackageManager(installed)).toBe('nix');
+    expect(isNpmGlobalInstall(installed, [])).toBe(false);
+    expect(canSelfUpgrade(installed, PROJECT_ROOT)).toBe(false);
+    expect(buildUpgradeCommandLines(installed, PROJECT_ROOT)[0]).toBe(
+      '  Update OpenSpec through Nix, the way you installed it.'
+    );
+  });
+
+  it('keeps an npm global under a Homebrew-installed node an npm install (upstream #2264)', () => {
+    // `npm install -g` with Homebrew's node writes to the brew prefix, not to a
+    // Cellar/openspec keg, and npm does own that copy.
+    expect(detectPackageManager('/opt/homebrew/lib/node_modules/@fission-ai/openspec')).toBe('npm');
+    expect(
+      detectPackageManager('/opt/homebrew/Cellar/node/24.1.0/lib/node_modules/@fission-ai/openspec')
+    ).toBe('npm');
+    expect(
+      detectPackageManager(path.join(HOME_ROOT, 'nix', 'store', '@fission-ai', 'openspec'))
+    ).toBe('npm');
+  });
+
   it('does not read a package manager into an incidental directory name', () => {
     // A user directory called "pnpm", or a project called "yarn", is not a
     // global install of either.
