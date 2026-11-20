@@ -54,3 +54,17 @@
      - `src/core/completions/installers/bash-installer.ts` 與 `zsh-installer.ts`：移除前置 `fs.access`，直接 `fs.readFile`。
      - `src/core/archive.ts`：在 `releaseArchiveClaim` 透過專屬 readHandle 讀取，並調整 `fingerprintMovablePath`、`fingerprintPortableContent`、`captureSpecSnapshots` 與 `restoreSpecSnapshots` 的讀取/屬性驗證順序，徹底消除 Check-Then-Use 漏洞特徵。
      - 測試套件（`test/helpers/store-git.ts`、`test/commands/schema.test.ts`、`test/core/archive.test.ts`、`test/core/completions/installers/bash-installer.test.ts`、`test/core/legacy-cleanup.test.ts`）：同步消除測試代碼中的 TOCTOU 模式。
+
+## 4. 2026-11-20 增量審查（`56dffbfe..7a6e81cd`）發現與修復狀態
+
+只列這輪審查的發現；每項附修復 commit 與日期。
+
+| 項目 | 風險 | 內容 | 修復 |
+|---|---|---|---|
+| C1 | 中高 | `profile-sync-drift.ts` 只看檔案在不在，`command-removal.ts` 刻意保留的 command 檔（使用者改過、symlink、無法確認）被當成 drift，每次 `openspec update` 都跑 config sync、重寫該工具的 skills（蓋掉使用者對 `SKILL.md` 的修改），永遠不會顯示 up to date | 已修 `7c12b053`（2026-11-21）：drift 與刪除共用 `isRemovableCommandFile` 判斷，保留的檔不算 drift；只因 drift 觸發的 config sync 遇到與任何 delivery 產出都不同的 `SKILL.md` 就保留並列出（版本升級與 `--force` 仍重寫）。測試：`update.test.ts`「reports up to date after keeping an edited command file…」「keeps a skill the user edited when a config sync…」、`profile-sync-drift.test.ts` 兩條 edited command 不算 drift |
+| C2 | 中 | bulk-archive 範本先同步主規格、最後才檢查封存目標（上游 #2276 同類，3eed70a9 只修 archive） | 已修 `15bc135b`（2026-11-21）：同步前先檢查每個 change 的封存目標、同步前再查一次、搬移前再查一次；重新產生 `skills/openspec-bulk-archive-change/SKILL.md` 與 parity hash。測試：`test/core/templates/bulk-archive-existing-target.test.ts` |
+| C3 | 低 | `openspec/specs/cli-completion/spec.md` 寫了沒實作的 `$ZDOTDIR` 行為（#2172 在本 fork defer） | 已修 `77ddfd70`（2026-11-21）：規格改回固定 `~/.zshrc` 並註明 defer。測試：`test/core/completions/zsh-spec-matches-installer.test.ts` |
+| C4 | 低 | `validate-unparseable-config.test.ts` 沒有 Windows 加長 timeout，逾時後 CLI 子行程殘留造成 `EBUSY` | 已修 `486d9027`（2026-11-21）：比照 store-git 用 `win32 ? 30s : 10s`，runCLI timeout 比測試 timeout 少 5 秒，`afterEach` 先終止殘留子行程再刪暫存目錄 |
+| N1 | 中 | zero-column TTY 的 spinner 卡死只修了 validate | 已確認並修 `352ea8f6`（2026-11-21）：實測 ora 9.4.1 在 `isTTY && columns=0` 時 `succeed()` 不返回；新增 `src/utils/spinner.ts` 的 `createSpinner`，status、instructions、new change、templates、init、update、schema、completion 全改用。測試：`test/utils/spinner.test.ts` |
+| H1 | 低 | FORK.md 把 size+mtime 重 stat 寫成「防 TOCTOU」 | 已修（2026-11-21，與本節同一個 docs commit）：改寫成「只縮小空窗、不能消除」並寫出仍會遺失的情況；不加 content hash（重算雜湊與 unlink 之間一樣有空窗，換不到保證） |
+| H2 | 低 | `check_dependency_freshness.py` 把 `^4`、`^4.6` 這類宣告當 SKIP，`--strict` 看不到 | 已修 `405d586e`（2026-11-21）：只比 major，短版號也分類。測試：`tools/test_tools.py` `test_short_version_ranges_are_classified_not_skipped` |
