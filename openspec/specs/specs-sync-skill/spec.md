@@ -35,8 +35,14 @@ The agent SHALL reconcile main specs with delta specs using the delta operation 
 
 #### Scenario: ADDED requirement already exists
 - **WHEN** delta contains `## ADDED Requirements` with a requirement
-- **AND** a requirement with the same name already exists in main spec
-- **THEN** update the existing requirement to match the delta version
+- **AND** a requirement with the same name already exists in main spec with identical content
+- **THEN** leave the existing requirement unchanged (re-syncing is a no-op)
+
+#### Scenario: ADDED requirement conflicts with an existing one
+- **WHEN** delta contains `## ADDED Requirements` with a requirement
+- **AND** a requirement with the same name already exists in main spec with different content
+- **THEN** do not overwrite the existing requirement
+- **AND** stop the sync for that capability and report the conflict for the user to reconcile, matching `openspec archive`
 
 #### Scenario: MODIFIED requirements
 - **WHEN** delta contains `## MODIFIED Requirements` with a requirement

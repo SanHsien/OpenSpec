@@ -130,7 +130,11 @@ ${STORE_SELECTION_GUIDANCE}
 
       **ADDED Requirements:**
       - If requirement doesn't exist in main spec → add it
-      - If requirement already exists → update it to match (treat as implicit MODIFIED)
+      - If it already exists with identical content → leave it unchanged (already synced; re-syncing is a no-op)
+      - If it already exists with different content → do not overwrite it. Stop the sync for that
+        capability, report the conflict, and ask the user to reconcile it (a later change may have
+        edited the requirement, or the delta should use MODIFIED). This matches \`openspec archive\`,
+        which skips an identical ADDED requirement and refuses a differing one.
 
       **MODIFIED Requirements:**
       - Find the requirement in main spec
@@ -423,7 +427,11 @@ ${STORE_SELECTION_GUIDANCE}
 
       **ADDED Requirements:**
       - If requirement doesn't exist in main spec → add it
-      - If requirement already exists → update it to match (treat as implicit MODIFIED)
+      - If it already exists with identical content → leave it unchanged (already synced; re-syncing is a no-op)
+      - If it already exists with different content → do not overwrite it. Stop the sync for that
+        capability, report the conflict, and ask the user to reconcile it (a later change may have
+        edited the requirement, or the delta should use MODIFIED). This matches \`openspec archive\`,
+        which skips an identical ADDED requirement and refuses a differing one.
 
       **MODIFIED Requirements:**
       - Find the requirement in main spec
