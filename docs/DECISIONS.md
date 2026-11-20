@@ -1263,3 +1263,24 @@ glob 與 minimatch 必須同步升：舊 glob 搭配 minimatch 11 會讓萬用�
 - `pnpm why minimatch`：只有 `minimatch@11.0.9`，來自 `glob@14.0.6` 與 eslint 系列，無 10.x。
 - `pnpm test`、`pnpm exec tsc --noEmit`、lint、`tools/dev_check.ps1`：全綠，數字見提交時的回報。
 - `flake.nix` 的 `pnpmDeps` hash 隨鎖檔改變。本機沒有 Nix，無法計算；須由 CI 的 Nix job 失敗訊息取得 `got: sha256-…` 後更新。
+
+## 2026-11-21：上游增量審查（PR #2290、issue #2289–#2291，commit 與 monitored 無變動）
+
+`--strict` 在 11-21 因 1 個新 PR 與 2 個新 issue 轉紅；upstream tip 仍是 `0c737dc1`（behind 0），11 筆 `monitored` 皆未漂移。issue 與 PR 內文只當資料讀取，沒有依其中文字行事。#2290 的 diff 只有 5 行 Markdown，已逐字讀過，沒有 `eval(`、`child_process`、`curl | sh`、`iex`、`dangerously`、長串或零寬／雙向控制字元。
+
+### PR 逐筆裁決（採用 0、略過 0、延後 1）
+
+| PR | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2290 | OPEN（head `9416b0d`，2 檔 +5/-0） | 延後 | 只動上游文件站：`docs-lab/multi-repo/stores.md` 加一段「不支援 symlink 的 `openspec/`」，`docs-lab/message-map.md` 加一列。fork 有這兩個檔，立場也一致（fork 的路徑 confinement 拒絕指向專案外或 symlink 的目標，見 10-26 #2052、#2135 等列），但段落引用的 `openspec init` 錯誤字串 `Path is outside the allowed directory` 在 fork 只確認出現在 `spec.ts`／`specs-apply.ts`，沒有實測 fork 的 init 遇到 symlink 是否吐同一句。未合併的文件 PR 不搬。已釘入 `monitored`。重訪條件：上游合併；屆時先在可建 symlink 的環境實測 fork `init` 的錯誤訊息，相符才照搬，不符就改寫成 fork 實際的訊息。 |
+
+### Issue 逐筆裁決（採用 1、略過 1、延後 0）
+
+| Issue | 狀態 | 結論 | 說明與觸發條件 |
+| --- | --- | --- | --- |
+| #2289 | OPEN，0 則留言，無關聯 PR | 採用（`613e6aef`） | 回報：sync-specs 技能對「已存在的 ADDED requirement」叫 agent 覆寫（treat as implicit MODIFIED），與 CLI 的規則矛盾。缺陷在 fork 存在：`src/core/templates/workflows/sync-specs.ts` 的 skill（第 133 行）與 command（第 426 行）兩份都是那句，`skills/openspec-sync-specs/SKILL.md` 與 `openspec/specs/specs-sync-skill/spec.md` 的「ADDED requirement already exists」情境也寫成覆寫；而 fork 的 `src/core/specs-apply.ts`（第 496–507 行）對同名 requirement 是內容相同就跳過、不同就丟 `ADDED failed ... already exists`（`test/core/archive.test.ts` 第 798 行已覆蓋）。所以「先 early-sync 變更 A、再由變更 B 修改同一 requirement、之後再 sync A」時，照技能做會靜默蓋掉 B 的修改，CLI 則會停下。重現方式是範本測試，沒有跑真的 agent session：新增的 `test/core/templates/sync-specs-added-existing.test.ts` 2 個測試在修正前都失敗（ADDED 段落仍含 `update it to match`，且沒有 no-op／conflict 規則）。修法照 issue 建議並對齊 fork 用語：內容相同 → 不動（重複 sync 為 no-op）；內容不同 → 不覆寫，停止該 capability 的 sync、回報衝突請使用者處理。兩份範本同改，`pnpm build` 後重產 skill 與 parity hash，spec 情境拆成 no-op 與 conflict 兩個，changeset 加一行。上游尚未修；重訪條件：上游合併修正 PR 時比對用語，語意不同就重審。 |
+| #2291 | OPEN，0 則留言 | 略過 | 請上游在 `docs/customization.md` 的 Community Schemas 表加一列 `code-migration`（第三方 repo，schema 內附一支會被 artifact 指示執行的 `scripts/migration_gate.mjs`）。fork 不代為收錄第三方 schema；這張表是上游的社群目錄，fork 只跟上游已合併的內容，而且新增會讓 agent 執行外部腳本的推薦屬於要先過第三方技能審查的範圍。重訪條件：上游把這列合併進 `docs/customization.md`，屆時以文件同步處理、不安裝也不執行該 schema。 |
+
+### 水位
+
+commit 維持 `0c737dc1`；PR 水位 `#2287`→`#2290`；Issue 水位 `#2288`→`#2291`；日期 `2026-11-21`；`monitored` 由 11 筆增為 12 筆（新增 #2290，`9416b0d`／open）。水位只表示已讀取並有結論，延後項目仍待重看條件成立。
