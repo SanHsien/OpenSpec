@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import ora from 'ora';
 import { createSpinner } from '../../src/utils/spinner.js';
 
 function fakeStream(columns: number | undefined, isTTY = true) {
@@ -42,9 +43,27 @@ describe('createSpinner', () => {
     expect(createSpinner({ text: 'x', stream }).isEnabled).toBe(false);
   });
 
-  it('keeps the animation on a TTY that has columns', () => {
+  it('leaves the decision to ora on a TTY that has columns', () => {
+    // ora itself turns the animation off under CI or TERM=dumb, so the
+    // property is "the helper does not override ora here", not "enabled".
     const { stream } = fakeStream(80);
-    expect(createSpinner({ text: 'x', stream }).isEnabled).toBe(true);
+    expect(createSpinner({ text: 'x', stream }).isEnabled).toBe(ora({ text: 'x', stream }).isEnabled);
+  });
+
+  it('keeps the animation on a TTY that has columns outside CI', () => {
+    const savedCi = process.env.CI;
+    const savedTerm = process.env.TERM;
+    delete process.env.CI;
+    process.env.TERM = 'xterm-256color';
+    try {
+      const { stream } = fakeStream(80);
+      expect(createSpinner({ text: 'x', stream }).isEnabled).toBe(true);
+    } finally {
+      if (savedCi === undefined) delete process.env.CI;
+      else process.env.CI = savedCi;
+      if (savedTerm === undefined) delete process.env.TERM;
+      else process.env.TERM = savedTerm;
+    }
   });
 
   it('leaves an explicit isEnabled from the caller alone', () => {
